@@ -1,0 +1,2431 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Report Catalog</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            :root {
+                --bg: #f4f6f9;
+                --surface: #ffffff;
+                --border: #e4e8ef;
+                --border-soft: #edf0f5;
+                --text: #111827;
+                --text-2: #4b5563;
+                --text-3: #9ca3af;
+                --shadow-sm:
+                    0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+                --shadow-md:
+                    0 4px 16px rgba(0, 0, 0, 0.08),
+                    0 2px 4px rgba(0, 0, 0, 0.04);
+
+                --src-color: #0891b2; /* cyan-600 */
+                --src-bg: #ecfeff;
+                --src-border: #a5f3fc;
+                --srv-bg: #f0fffe;
+                --srv-border: #67e8f9;
+                --db-bg: #f5ffff;
+                --db-border: #cffafe;
+
+                --proc-color: #d97706; /* amber-600 */
+                --proc-bg: #fffbeb;
+                --proc-border: #fde68a;
+
+                --ssrs-color: #7c3aed; /* violet-700 */
+                --ssrs-bg: #faf5ff;
+                --ssrs-border: #ddd6fe;
+
+                --pbi-color: #1d4ed8; /* blue-700 */
+                --pbi-bg: #eff6ff;
+                --pbi-border: #bfdbfe;
+
+                --sys-color: #059669; /* emerald-600 – Source System */
+                --sys-bg: #f0fdf4;
+                --sys-border: #6ee7b7;
+
+                --dlv-color: #0d9488; /* teal-600 – Delivery */
+                --dlv-bg: #f0fdfa;
+                --dlv-border: #5eead4;
+
+                --etl-color: #2563eb; /* blue-600 – ETL Process */
+                --etl-bg: #eff6ff;
+                --etl-border: #93c5fd;
+
+                --con-color: #8b5cf6; /* violet-500 – Consumer */
+                --con-bg: #faf5ff;
+                --con-border: #c4b5fd;
+
+                --sel-ring: #3b82f6;
+                --impact-red: #dc2626;
+            }
+
+            body {
+                font-family: "DM Sans", "Segoe UI", system-ui, sans-serif;
+                background: var(--bg);
+                color: var(--text);
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                font-size: 14px;
+                -webkit-font-smoothing: antialiased;
+            }
+
+            /* ── Header ──────────────────────────────────────────────────────────────── */
+            #hdr {
+                height: 54px;
+                background: var(--surface);
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                align-items: center;
+                padding: 0 20px;
+                gap: 14px;
+                flex-shrink: 0;
+                box-shadow: var(--shadow-sm);
+                z-index: 20;
+            }
+
+            #hdr-logo {
+                display: flex;
+                align-items: center;
+                gap: 9px;
+                text-decoration: none;
+                flex-shrink: 0;
+            }
+
+            #hdr-logo-mark {
+                width: 30px;
+                height: 30px;
+                background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 15px;
+            }
+
+            #hdr-title {
+                font-size: 15px;
+                font-weight: 600;
+                color: var(--text);
+                white-space: nowrap;
+            }
+
+            #hdr-divider {
+                width: 1px;
+                height: 24px;
+                background: var(--border);
+                flex-shrink: 0;
+            }
+
+            #search-wrap {
+                position: relative;
+                flex: 1;
+                max-width: 300px;
+            }
+
+            #search-wrap svg {
+                position: absolute;
+                left: 9px;
+                top: 50%;
+                transform: translateY(-50%);
+                pointer-events: none;
+                color: var(--text-3);
+            }
+
+            #search {
+                width: 100%;
+                height: 34px;
+                border: 1.5px solid var(--border);
+                border-radius: 8px;
+                padding: 0 10px 0 32px;
+                font-size: 13px;
+                font-family: inherit;
+                background: var(--bg);
+                color: var(--text);
+                outline: none;
+                transition:
+                    border-color 0.15s,
+                    box-shadow 0.15s,
+                    background 0.15s;
+            }
+            #search:focus {
+                border-color: #93c5fd;
+                background: var(--surface);
+                box-shadow: 0 0 0 3px #dbeafe60;
+            }
+            #search::placeholder {
+                color: var(--text-3);
+            }
+
+            .hdr-btn {
+                height: 34px;
+                padding: 0 13px;
+                border-radius: 8px;
+                border: 1.5px solid var(--border);
+                background: var(--surface);
+                font-family: inherit;
+                font-size: 12.5px;
+                font-weight: 500;
+                color: var(--text-2);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 7px;
+                white-space: nowrap;
+                transition: all 0.15s;
+            }
+            .hdr-btn:hover {
+                background: var(--bg);
+                border-color: #cbd5e1;
+                color: var(--text);
+            }
+            .hdr-btn.on {
+                background: #fef2f2;
+                color: var(--impact-red);
+                border-color: #fca5a5;
+            }
+
+            .hdr-btn .pulse {
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                background: currentColor;
+            }
+            .hdr-btn.on .pulse {
+                animation: pulse 1.4s ease-in-out infinite;
+            }
+            @keyframes pulse {
+                0%,
+                100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.4;
+                }
+            }
+
+            #hdr-meta {
+                margin-left: auto;
+                font-size: 11.5px;
+                color: var(--text-3);
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            /* ── Main layout ─────────────────────────────────────────────────────────── */
+            #main {
+                flex: 1;
+                display: flex;
+                overflow: hidden;
+                position: relative;
+            }
+
+            /* ── Graph wrap ──────────────────────────────────────────────────────────── */
+            #graph-wrap {
+                flex: 1;
+                overflow: auto;
+                position: relative;
+            }
+
+            #graph-wrap::-webkit-scrollbar {
+                width: 7px;
+                height: 7px;
+            }
+            #graph-wrap::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            #graph-wrap::-webkit-scrollbar-thumb {
+                background: #d1d5db;
+                border-radius: 4px;
+            }
+            #graph-wrap::-webkit-scrollbar-thumb:hover {
+                background: #9ca3af;
+            }
+
+            #graph-svg {
+                display: block;
+            }
+
+            /* ── Detail panel ────────────────────────────────────────────────────────── */
+            #panel {
+                width: 370px;
+                min-width: 370px;
+                background: var(--surface);
+                border-left: 1px solid var(--border);
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                flex-shrink: 0;
+                transform: translateX(100%);
+                transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+                position: absolute;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                box-shadow: -6px 0 32px rgba(0, 0, 0, 0.07);
+                z-index: 10;
+            }
+            #panel.open {
+                transform: translateX(0);
+            }
+
+            #panel-hdr {
+                padding: 18px 16px 13px;
+                border-bottom: 1px solid var(--border-soft);
+                flex-shrink: 0;
+                position: relative;
+            }
+
+            #panel-close {
+                position: absolute;
+                top: 14px;
+                right: 14px;
+                width: 28px;
+                height: 28px;
+                border-radius: 7px;
+                border: 1.5px solid var(--border);
+                background: var(--bg);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 13px;
+                color: var(--text-3);
+                transition: all 0.12s;
+            }
+            #panel-close:hover {
+                background: var(--surface);
+                color: var(--text-2);
+                border-color: #9ca3af;
+            }
+
+            #panel-badges {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                margin-bottom: 8px;
+                flex-wrap: wrap;
+            }
+
+            .badge {
+                font-size: 10.5px;
+                font-weight: 600;
+                padding: 2px 8px;
+                border-radius: 5px;
+                letter-spacing: 0.04em;
+            }
+
+            #panel-name {
+                font-size: 17px;
+                font-weight: 600;
+                color: var(--text);
+                line-height: 1.3;
+                margin-bottom: 3px;
+            }
+
+            #panel-meta {
+                font-size: 11.5px;
+                color: var(--text-3);
+            }
+
+            #impact-banner {
+                margin-top: 10px;
+                padding: 8px 11px;
+                background: #fef2f2;
+                border: 1.5px solid #fca5a5;
+                border-radius: 8px;
+                font-size: 12.5px;
+                color: var(--impact-red);
+                font-weight: 500;
+                display: none;
+            }
+
+            /* ── Dependencies ────────────────────────────────────────────────────────── */
+            #panel-deps {
+                padding: 13px 16px;
+                border-bottom: 1px solid var(--border-soft);
+                flex-shrink: 0;
+                display: flex;
+                gap: 14px;
+                flex-wrap: wrap;
+            }
+
+            .dep-section {
+                flex: 1;
+                min-width: 120px;
+            }
+
+            .dep-label {
+                font-size: 10px;
+                font-weight: 600;
+                color: var(--text-3);
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                margin-bottom: 7px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+
+            .dep-chips {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+
+            .chip {
+                font-size: 11.5px;
+                padding: 3px 9px;
+                border-radius: 6px;
+                border: 1.5px solid var(--border);
+                background: var(--bg);
+                color: var(--text-2);
+                cursor: pointer;
+                transition: all 0.1s;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                font-family: inherit;
+            }
+            .chip:hover {
+                background: var(--surface);
+                border-color: #9ca3af;
+                color: var(--text);
+            }
+            .chip .chip-dot {
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                flex-shrink: 0;
+            }
+
+            /* ── Docs ────────────────────────────────────────────────────────────────── */
+            #panel-docs {
+                flex: 1;
+                overflow-y: auto;
+                padding: 16px;
+            }
+
+            #panel-docs::-webkit-scrollbar {
+                width: 4px;
+            }
+            #panel-docs::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            #panel-docs::-webkit-scrollbar-thumb {
+                background: var(--border);
+                border-radius: 2px;
+            }
+
+            .docs-label {
+                font-size: 10px;
+                font-weight: 600;
+                color: var(--text-3);
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                margin-bottom: 12px;
+            }
+
+            /* Markdown styles */
+            .md h1 {
+                font-size: 16px;
+                font-weight: 600;
+                color: var(--text);
+                margin: 0 0 10px;
+                padding-bottom: 7px;
+                border-bottom: 1px solid var(--border);
+            }
+            .md h2 {
+                font-size: 14px;
+                font-weight: 600;
+                color: var(--text);
+                margin: 14px 0 6px;
+            }
+            .md h3 {
+                font-size: 11px;
+                font-weight: 600;
+                color: var(--text-2);
+                margin: 12px 0 5px;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+            }
+            .md p {
+                font-size: 13px;
+                line-height: 1.65;
+                color: #374151;
+                margin: 5px 0;
+            }
+            .md ul,
+            .md ol {
+                font-size: 13px;
+                line-height: 1.65;
+                color: #374151;
+                margin: 5px 0 5px 18px;
+            }
+            .md li {
+                margin: 3px 0;
+            }
+            .md strong {
+                font-weight: 600;
+                color: var(--text);
+            }
+            .md em {
+                font-style: italic;
+                color: var(--text-2);
+            }
+            .md code {
+                font-family: "DM Mono", "Cascadia Code", monospace;
+                font-size: 11.5px;
+                background: #f1f5f9;
+                color: #0369a1;
+                padding: 1px 5px;
+                border-radius: 4px;
+                border: 1px solid #e2e8f0;
+            }
+            .md pre {
+                background: #f8fafc;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 11px 13px;
+                overflow-x: auto;
+                margin: 8px 0;
+            }
+            .md pre code {
+                background: none;
+                border: none;
+                padding: 0;
+                color: var(--text);
+                font-size: 12px;
+            }
+            .md blockquote {
+                border-left: 3px solid var(--border);
+                padding-left: 12px;
+                color: var(--text-2);
+                margin: 8px 0;
+                font-style: italic;
+            }
+            .md table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 12.5px;
+                margin: 10px 0;
+            }
+            .md th {
+                background: #f8fafc;
+                font-weight: 600;
+                text-align: left;
+            }
+            .md th,
+            .md td {
+                border: 1px solid var(--border);
+                padding: 6px 9px;
+            }
+            .md tr:hover td {
+                background: #fafbfc;
+            }
+            .md hr {
+                border: none;
+                border-top: 1px solid var(--border);
+                margin: 14px 0;
+            }
+            .md a {
+                color: #2563eb;
+                text-decoration: none;
+            }
+            .md a:hover {
+                text-decoration: underline;
+            }
+
+            /* ── Empty state ─────────────────────────────────────────────────────────── */
+            #empty {
+                position: absolute;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                width: 370px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 40px;
+                text-align: center;
+                pointer-events: none;
+                opacity: 0.7;
+            }
+            #empty.hidden {
+                display: none;
+            }
+            #empty svg {
+                margin-bottom: 14px;
+                color: #d1d5db;
+            }
+            #empty p {
+                font-size: 13px;
+                color: var(--text-3);
+                line-height: 1.6;
+            }
+
+            /* ── Column type legend ──────────────────────────────────────────────────── */
+            #legend {
+                position: absolute;
+                bottom: 16px;
+                left: 20px;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                padding: 7px 14px;
+                box-shadow: var(--shadow-sm);
+                pointer-events: none;
+                z-index: 5;
+            }
+            .leg-item {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 11.5px;
+                color: var(--text-2);
+            }
+            .leg-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- ── Header ──────────────────────────────────────────────────────────── -->
+        <div id="hdr">
+            <a id="hdr-logo" href="#">
+                <div id="hdr-logo-mark">📊</div>
+                <span id="hdr-title">Report Catalog</span>
+            </a>
+            <div id="hdr-divider"></div>
+
+            <div id="search-wrap">
+                <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                </svg>
+                <input
+                    id="search"
+                    type="text"
+                    placeholder="Search assets…"
+                    autocomplete="off"
+                    spellcheck="false"
+                />
+            </div>
+
+            <button class="hdr-btn" id="impact-btn">
+                <span class="pulse"></span>
+                Impact Analysis
+            </button>
+
+            <span id="hdr-meta">Loading…</span>
+        </div>
+
+        <!-- ── Main ────────────────────────────────────────────────────────────── -->
+        <div id="main">
+            <div id="graph-wrap">
+                <svg id="graph-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+            </div>
+
+            <!-- Detail panel -->
+            <div id="panel">
+                <div id="panel-hdr">
+                    <button id="panel-close" title="Close (Esc)">✕</button>
+                    <div id="panel-badges"></div>
+                    <div id="panel-name"></div>
+                    <div id="panel-meta"></div>
+                    <div id="impact-banner"></div>
+                </div>
+                <div id="panel-deps">
+                    <div class="dep-section" id="upstream-section">
+                        <div class="dep-label">
+                            <svg
+                                width="10"
+                                height="10"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                            >
+                                <path d="M12 19V5M5 12l7-7 7 7" />
+                            </svg>
+                            Upstream
+                        </div>
+                        <div class="dep-chips" id="upstream-chips"></div>
+                    </div>
+                    <div class="dep-section" id="downstream-section">
+                        <div class="dep-label">
+                            <svg
+                                width="10"
+                                height="10"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                            >
+                                <path d="M12 5v14M19 12l-7 7-7-7" />
+                            </svg>
+                            Downstream
+                        </div>
+                        <div class="dep-chips" id="downstream-chips"></div>
+                    </div>
+                </div>
+                <div id="panel-docs">
+                    <div class="docs-label">Documentation</div>
+                    <div class="md" id="docs-content"></div>
+                </div>
+            </div>
+
+            <!-- Empty state (shows when panel is closed) -->
+            <div id="empty">
+                <svg
+                    width="40"
+                    height="40"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <path d="M10 6.5h4M17.5 10v4M10 17.5h4M6.5 10v4" />
+                </svg>
+                <p>
+                    Click any asset to view documentation, upstream sources, and
+                    downstream dependencies.
+                </p>
+            </div>
+
+            <!-- Legend -->
+            <div id="legend">
+                <div class="leg-item">
+                    <div
+                        class="leg-dot"
+                        style="background: var(--sys-color)"
+                    ></div>
+                    Source System
+                </div>
+                <div class="leg-item">
+                    <div
+                        class="leg-dot"
+                        style="background: var(--dlv-color)"
+                    ></div>
+                    Delivery
+                </div>
+                <div class="leg-item">
+                    <div
+                        class="leg-dot"
+                        style="background: var(--etl-color)"
+                    ></div>
+                    ETL Process
+                </div>
+                <div class="leg-item">
+                    <div
+                        class="leg-dot"
+                        style="background: var(--src-color)"
+                    ></div>
+                    Data Source
+                </div>
+                <div class="leg-item">
+                    <div
+                        class="leg-dot"
+                        style="background: var(--con-color)"
+                    ></div>
+                    Consumer
+                </div>
+            </div>
+        </div>
+
+        <script src="catalog.js"></script>
+        <script>
+            "use strict";
+
+            // ─── Layout constants ──────────────────────────────────────────────────────
+            const L = {
+                pad: 24, // outer padding
+                colGap: 80, // gap between columns (edge routing space)
+
+                // Left upstream columns (Source System, Delivery, ETL Process)
+                sysW: 190, // Source System column width
+                dlvW: 190, // Delivery Mechanism column width
+                etlW: 190, // ETL Process column width
+                leftGroupPad: 10, // padding for left-column background boxes
+
+                // Data Source column
+                srcW: 258,
+                srvR: 9,
+                srvHdrH: 36,
+                srvPadV: 10,
+                srvGap: 16,
+                dbR: 7,
+                dbHdrH: 28,
+                dbPadV: 8,
+                dbGap: 8,
+                dbIndent: 10,
+                leafH: 36,
+                leafGap: 5,
+                leafIndent: 20,
+                flatGap: 8,
+                flatOffset: 18,
+                accentW: 3,
+
+                // Consumer column (processes + reports with parent-child tree)
+                conW: 224,
+                conH: 52, // top-level consumer node height
+                conGap: 10, // gap between top-level consumer items
+                conGroupGap: 18, // extra gap after a parent+children group
+                conChildIndent: 14, // left indent for child nodes
+                conChildH: 42, // height of a child node
+                conChildGap: 5, // gap between siblings
+                conGroupPad: 12, // padding for consumer background box
+
+                topPad: 48,
+                botPad: 28,
+                edgeCurve: 52,
+                minColH: 80,
+            };
+
+            // Derived column X positions (computed once)
+            let COL = {};
+
+            // ─── Asset configuration ───────────────────────────────────────────────────
+            const ASSET = {
+                Table: {
+                    color: "#0891b2",
+                    bg: "#ffffff",
+                    border: "#67e8f9",
+                    icon: "▦",
+                },
+                View: {
+                    color: "#0284c7",
+                    bg: "#f0f9ff",
+                    border: "#7dd3fc",
+                    icon: "◈",
+                },
+                "REST API": {
+                    color: "#0891b2",
+                    bg: "#ffffff",
+                    border: "#67e8f9",
+                    icon: "⚡",
+                },
+                "File/CSV": {
+                    color: "#64748b",
+                    bg: "#f8fafc",
+                    border: "#94a3b8",
+                    icon: "▤",
+                },
+                Source: {
+                    color: "#0891b2",
+                    bg: "#ffffff",
+                    border: "#67e8f9",
+                    icon: "⬡",
+                },
+                Python: {
+                    color: "#d97706",
+                    bg: "#fffbeb",
+                    border: "#fbbf24",
+                    icon: "⬡",
+                },
+                "Stored Proc": {
+                    color: "#c2410c",
+                    bg: "#fff7ed",
+                    border: "#fdba74",
+                    icon: "⚙",
+                },
+                "SQL Script": {
+                    color: "#b45309",
+                    bg: "#fffbeb",
+                    border: "#fcd34d",
+                    icon: "◻",
+                },
+                Process: {
+                    color: "#d97706",
+                    bg: "#fffbeb",
+                    border: "#fbbf24",
+                    icon: "⬡",
+                },
+                SSRS: {
+                    color: "#7c3aed",
+                    bg: "#faf5ff",
+                    border: "#c4b5fd",
+                    icon: "▣",
+                },
+                PowerBI: {
+                    color: "#1d4ed8",
+                    bg: "#eff6ff",
+                    border: "#93c5fd",
+                    icon: "◈",
+                },
+                Report: {
+                    color: "#7c3aed",
+                    bg: "#faf5ff",
+                    border: "#c4b5fd",
+                    icon: "▣",
+                },
+                // Source System subtypes
+                "Source System": {
+                    color: "#059669",
+                    bg: "#f0fdf4",
+                    border: "#6ee7b7",
+                    icon: "⊞",
+                },
+                ERP: {
+                    color: "#059669",
+                    bg: "#f0fdf4",
+                    border: "#6ee7b7",
+                    icon: "⊞",
+                },
+                CRM: {
+                    color: "#0891b2",
+                    bg: "#ecfeff",
+                    border: "#67e8f9",
+                    icon: "☁",
+                },
+                // Delivery Mechanism subtypes
+                Delivery: {
+                    color: "#0d9488",
+                    bg: "#f0fdfa",
+                    border: "#5eead4",
+                    icon: "⇢",
+                },
+                Replication: {
+                    color: "#0d9488",
+                    bg: "#f0fdfa",
+                    border: "#5eead4",
+                    icon: "⇢",
+                },
+                "API Pull": {
+                    color: "#0d9488",
+                    bg: "#f0fdfa",
+                    border: "#5eead4",
+                    icon: "⇢",
+                },
+                SFTP: {
+                    color: "#0d9488",
+                    bg: "#f0fdfa",
+                    border: "#5eead4",
+                    icon: "⇢",
+                },
+                // ETL Process subtypes
+                ETL: {
+                    color: "#2563eb",
+                    bg: "#eff6ff",
+                    border: "#93c5fd",
+                    icon: "▫",
+                },
+                SSIS: {
+                    color: "#2563eb",
+                    bg: "#eff6ff",
+                    border: "#93c5fd",
+                    icon: "▫",
+                },
+                ADF: {
+                    color: "#2563eb",
+                    bg: "#eff6ff",
+                    border: "#93c5fd",
+                    icon: "▫",
+                },
+                dbt: {
+                    color: "#f97316",
+                    bg: "#fff7ed",
+                    border: "#fdba74",
+                    icon: "⬡",
+                },
+            };
+
+            function assetCfg(subtype) {
+                return ASSET[subtype] || ASSET["Source"];
+            }
+
+            // ─── SVG helpers ───────────────────────────────────────────────────────────
+            const NS = "http://www.w3.org/2000/svg";
+
+            function el(tag, attrs, children) {
+                const e = document.createElementNS(NS, tag);
+                if (attrs)
+                    for (const [k, v] of Object.entries(attrs))
+                        e.setAttribute(k, v);
+                if (children) for (const c of children) if (c) e.appendChild(c);
+                return e;
+            }
+
+            function rect(x, y, w, h, rx, fill, stroke, sw = 1.5) {
+                return el("rect", {
+                    x,
+                    y,
+                    width: w,
+                    height: h,
+                    rx,
+                    fill,
+                    stroke,
+                    "stroke-width": sw,
+                });
+            }
+
+            function text(
+                x,
+                y,
+                str,
+                size,
+                fill,
+                weight,
+                anchor = "start",
+                extra = {},
+            ) {
+                const t = el("text", {
+                    x,
+                    y,
+                    "font-size": size,
+                    fill,
+                    "font-weight": weight,
+                    "text-anchor": anchor,
+                    "dominant-baseline": "middle",
+                    "font-family":
+                        "'DM Sans', 'Segoe UI', system-ui, sans-serif",
+                    ...extra,
+                });
+                t.textContent = str;
+                return t;
+            }
+
+            function trunc(s, maxLen) {
+                if (!s) return "";
+                return s.length <= maxLen ? s : s.slice(0, maxLen - 1) + "…";
+            }
+
+            function bezierPath(x1, y1, x2, y2) {
+                const cx = L.edgeCurve;
+                return `M${x1},${y1} C${x1 + cx},${y1} ${x2 - cx},${y2} ${x2},${y2}`;
+            }
+
+            // ─── State ─────────────────────────────────────────────────────────────────
+            const S = {
+                selected: null,
+                impactMode: false,
+                search: "",
+                pos: {}, // id → { x, y, w, h }
+                allNodes: [], // flat list of all selectable leaf nodes
+                edges: [],
+            };
+
+            // ─── Data helpers ──────────────────────────────────────────────────────
+            function getAllLeaves() {
+                const nodes = [];
+                // Left upstream columns
+                nodes.push(...(CATALOG.sourceSystems || []));
+                nodes.push(...(CATALOG.deliveryMechanisms || []));
+                nodes.push(...(CATALOG.etlProcesses || []));
+                // Data Source column (leaf tables + flat sources)
+                for (const item of CATALOG.sourceTree) {
+                    if (item.type === "server_group") {
+                        for (const db of item.databases || [])
+                            for (const tbl of db.tables || []) nodes.push(tbl);
+                    } else {
+                        nodes.push(item);
+                    }
+                }
+                // Consumer column
+                nodes.push(...(CATALOG.processes || []));
+                nodes.push(...(CATALOG.reports || []));
+                return nodes;
+            }
+
+            function findNode(id) {
+                return S.allNodes.find((n) => n.id === id);
+            }
+
+            function upstream(id) {
+                return S.edges
+                    .filter((e) => e.target === id)
+                    .map((e) => findNode(e.source))
+                    .filter(Boolean);
+            }
+            function downstream(id) {
+                return S.edges
+                    .filter((e) => e.source === id)
+                    .map((e) => findNode(e.target))
+                    .filter(Boolean);
+            }
+
+            function allDownstream(id, vis = new Set()) {
+                if (vis.has(id)) return vis;
+                vis.add(id);
+                downstream(id).forEach((n) => allDownstream(n.id, vis));
+                return vis;
+            }
+            function allUpstream(id, vis = new Set()) {
+                if (vis.has(id)) return vis;
+                vis.add(id);
+                upstream(id).forEach((n) => allUpstream(n.id, vis));
+                return vis;
+            }
+
+            function highlightSet(id) {
+                if (S.impactMode) {
+                    return new Set([
+                        ...allDownstream(id),
+                        ...allUpstream(id),
+                        id,
+                    ]);
+                }
+                return new Set([
+                    id,
+                    ...upstream(id).map((n) => n.id),
+                    ...downstream(id).map((n) => n.id),
+                ]);
+            }
+
+            function searchSet() {
+                if (!S.search) return null;
+                const q = S.search.toLowerCase();
+                const matched = new Set();
+                for (const n of S.allNodes) {
+                    if (
+                        (n.label || "").toLowerCase().includes(q) ||
+                        (n.subtype || "").toLowerCase().includes(q) ||
+                        (n.owner || "").toLowerCase().includes(q) ||
+                        (n.docs || "").toLowerCase().includes(q)
+                    ) {
+                        matched.add(n.id);
+                        upstream(n.id).forEach((u) => matched.add(u.id));
+                        downstream(n.id).forEach((d) => matched.add(d.id));
+                    }
+                }
+                return matched;
+            }
+
+            // ─── Layout engine ─────────────────────────────────────────────────────────
+            function calcDbH(db) {
+                const n = (db.tables || []).length;
+                return (
+                    L.dbHdrH +
+                    L.dbPadV +
+                    (n > 0 ? n * L.leafH + (n - 1) * L.leafGap : L.leafH) +
+                    L.dbPadV
+                );
+            }
+
+            function calcSrvH(srv) {
+                const dbs = srv.databases || [];
+                let h = L.srvHdrH + L.srvPadV;
+                dbs.forEach((db, i) => {
+                    h += calcDbH(db);
+                    if (i < dbs.length - 1) h += L.dbGap;
+                });
+                return h + L.srvPadV;
+            }
+
+            function computeLayout() {
+                const pos = {};
+
+                // ── Column X positions ──────────────────────────────────────────────────────────────────
+                COL.sysX = L.pad;
+                COL.dlvX = COL.sysX + L.sysW + L.colGap;
+                COL.etlX = COL.dlvX + L.dlvW + L.colGap;
+                COL.srcX = COL.etlX + L.etlW + L.colGap;
+                COL.conX = COL.srcX + L.srcW + L.colGap;
+
+                // Helper: layout a flat list into a column
+                function layoutFlat(items, colX, colW) {
+                    let y = L.topPad;
+                    for (let i = 0; i < items.length; i++) {
+                        pos[items[i].id] = { x: colX, y, w: colW, h: L.leafH };
+                        y += L.leafH + (i < items.length - 1 ? L.flatGap : 0);
+                    }
+                    return Math.max(y + L.botPad, L.minColH);
+                }
+
+                // ── Source System column ────────────────────────────────────────────────────────────
+                const sysColH = layoutFlat(
+                    CATALOG.sourceSystems || [],
+                    COL.sysX,
+                    L.sysW,
+                );
+
+                // ── Delivery Mechanism column ──────────────────────────────────────────────────────
+                const dlvColH = layoutFlat(
+                    CATALOG.deliveryMechanisms || [],
+                    COL.dlvX,
+                    L.dlvW,
+                );
+
+                // ── ETL Process column ───────────────────────────────────────────────────────────────
+                const etlColH = layoutFlat(
+                    CATALOG.etlProcesses || [],
+                    COL.etlX,
+                    L.etlW,
+                );
+
+                // ── Data Source column ────────────────────────────────────────────────────────────
+                let srcY = L.topPad;
+                const servers = CATALOG.sourceTree.filter(
+                    (i) => i.type === "server_group",
+                );
+                const flatSrc = CATALOG.sourceTree.filter(
+                    (i) => i.type !== "server_group",
+                );
+
+                for (let si = 0; si < servers.length; si++) {
+                    const srv = servers[si];
+                    const srvH = calcSrvH(srv);
+                    pos[srv.id] = { x: COL.srcX, y: srcY, w: L.srcW, h: srvH };
+                    let iy = srcY + L.srvHdrH + L.srvPadV;
+                    for (let di = 0; di < (srv.databases || []).length; di++) {
+                        const db = srv.databases[di];
+                        const dbH = calcDbH(db);
+                        const dbX = COL.srcX + L.dbIndent;
+                        const dbW = L.srcW - L.dbIndent * 2;
+                        pos[db.id] = { x: dbX, y: iy, w: dbW, h: dbH };
+                        let ty = iy + L.dbHdrH + L.dbPadV;
+                        for (const tbl of db.tables || []) {
+                            const tx = dbX + L.leafIndent;
+                            const tw = dbW - L.leafIndent - 8;
+                            pos[tbl.id] = { x: tx, y: ty, w: tw, h: L.leafH };
+                            ty += L.leafH + L.leafGap;
+                        }
+                        iy +=
+                            dbH +
+                            (di < (srv.databases || []).length - 1
+                                ? L.dbGap
+                                : 0);
+                    }
+                    srcY += srvH + (si < servers.length - 1 ? L.srvGap : 0);
+                }
+                if (flatSrc.length > 0 && servers.length > 0)
+                    srcY += L.flatOffset;
+                for (let fi = 0; fi < flatSrc.length; fi++) {
+                    pos[flatSrc[fi].id] = {
+                        x: COL.srcX,
+                        y: srcY,
+                        w: L.srcW,
+                        h: L.leafH,
+                    };
+                    srcY += L.leafH + (fi < flatSrc.length - 1 ? L.flatGap : 0);
+                }
+                const srcColH = Math.max(srcY + L.botPad, L.minColH);
+
+                // Reference height for centering
+                const refH = Math.max(sysColH, dlvColH, etlColH, srcColH);
+
+                // ── Consumer column (processes + child reports) ────────────────────────────────
+                const procs = CATALOG.processes || [];
+                const rpts = CATALOG.reports || [];
+                const allCon = [...procs, ...rpts];
+                const conIds = new Set(allCon.map((c) => c.id));
+                const edges = CATALOG.edges || [];
+
+                // Edges where BOTH endpoints are consumers → render as tree connectors
+                const intraEdges = edges.filter(
+                    (e) => conIds.has(e.source) && conIds.has(e.target),
+                );
+
+                // Count how many parents each consumer has
+                const parentCount = {};
+                for (const e of intraEdges)
+                    parentCount[e.target] = (parentCount[e.target] || 0) + 1;
+
+                // Only treat as child if it has exactly one consumer parent
+                const childConIds = new Set(
+                    intraEdges
+                        .filter((e) => parentCount[e.target] === 1)
+                        .map((e) => e.target),
+                );
+
+                const topLevel = allCon.filter((c) => !childConIds.has(c.id));
+                const conChildren = (id) =>
+                    intraEdges
+                        .filter(
+                            (e) =>
+                                e.source === id && parentCount[e.target] === 1,
+                        )
+                        .map((e) => allCon.find((c) => c.id === e.target))
+                        .filter(Boolean);
+
+                // Compute total consumer column height for centering
+                let totalConH = 0;
+                for (let ti = 0; ti < topLevel.length; ti++) {
+                    totalConH += L.conH;
+                    const ch = conChildren(topLevel[ti].id);
+                    if (ch.length > 0) {
+                        totalConH += L.conGap;
+                        totalConH +=
+                            ch.length * L.conChildH +
+                            Math.max(0, ch.length - 1) * L.conChildGap;
+                        totalConH += L.conGroupGap;
+                    } else if (ti < topLevel.length - 1) {
+                        totalConH += L.conGap;
+                    }
+                }
+
+                let cy =
+                    L.topPad +
+                    Math.max(0, (refH - L.topPad - L.botPad - totalConH) / 2);
+                for (let ti = 0; ti < topLevel.length; ti++) {
+                    const item = topLevel[ti];
+                    pos[item.id] = { x: COL.conX, y: cy, w: L.conW, h: L.conH };
+                    cy += L.conH;
+                    const ch = conChildren(item.id);
+                    if (ch.length > 0) {
+                        cy += L.conGap;
+                        for (let ci = 0; ci < ch.length; ci++) {
+                            pos[ch[ci].id] = {
+                                x: COL.conX + L.conChildIndent,
+                                y: cy,
+                                w: L.conW - L.conChildIndent,
+                                h: L.conChildH,
+                            };
+                            cy +=
+                                L.conChildH +
+                                (ci < ch.length - 1 ? L.conChildGap : 0);
+                        }
+                        cy += L.conGroupGap;
+                    } else if (ti < topLevel.length - 1) {
+                        cy += L.conGap;
+                    }
+                }
+                const conColH = Math.max(cy + L.botPad, refH);
+
+                // Store consumer tree for render()
+                S.conTree = { topLevel, conChildren, childConIds };
+
+                const svgW = COL.conX + L.conW + L.pad;
+                const svgH = Math.max(
+                    sysColH,
+                    dlvColH,
+                    etlColH,
+                    srcColH,
+                    conColH,
+                );
+                return { pos, svgW, svgH };
+            }
+
+            // ─── Renderer ────────────────────────────────────────────────────────────────────────
+            function render() {
+                const svg = document.getElementById("graph-svg");
+                svg.innerHTML = "";
+
+                S.allNodes = getAllLeaves();
+                S.edges = CATALOG.edges || [];
+
+                const { pos, svgW, svgH } = computeLayout();
+                S.pos = pos;
+                const { topLevel, conChildren, childConIds } = S.conTree;
+                const conIds = new Set(
+                    [
+                        ...(CATALOG.processes || []),
+                        ...(CATALOG.reports || []),
+                    ].map((c) => c.id),
+                );
+
+                svg.setAttribute("width", svgW);
+                svg.setAttribute("height", svgH);
+
+                // ── Arrow markers ────────────────────────────────────────────────────────────────────
+                const defs = el("defs");
+                for (const [id, fill] of [
+                    ["arr", "#c9d1da"],
+                    ["arr-hl", "#60a5fa"],
+                    ["arr-imp", "#fca5a5"],
+                ]) {
+                    const m = el("marker", {
+                        id,
+                        viewBox: "0 -4 8 8",
+                        refX: "7",
+                        refY: "0",
+                        markerWidth: "5",
+                        markerHeight: "5",
+                        orient: "auto",
+                    });
+                    m.appendChild(el("path", { d: "M0,-4L8,0L0,4", fill }));
+                    defs.appendChild(m);
+                }
+                svg.appendChild(defs);
+
+                // ── Column dividers (4 for 5 columns) ──────────────────────────────────────────────
+                const divs = el("g");
+                for (const x of [
+                    COL.dlvX - L.colGap * 0.55,
+                    COL.etlX - L.colGap * 0.55,
+                    COL.srcX - L.colGap * 0.55,
+                    COL.conX - L.colGap * 0.55,
+                ]) {
+                    divs.appendChild(
+                        el("line", {
+                            x1: x,
+                            y1: 0,
+                            x2: x,
+                            y2: svgH,
+                            stroke: "#e9ecf0",
+                            "stroke-width": 1,
+                            "stroke-dasharray": "5 5",
+                        }),
+                    );
+                }
+                svg.appendChild(divs);
+
+                // ── Column headers (5 columns) ──────────────────────────────────────────────────
+                const hdrs = el("g");
+                const hdrData = [
+                    {
+                        x: COL.sysX + L.sysW / 2,
+                        label: "SOURCE SYSTEM",
+                        color: "#059669",
+                    },
+                    {
+                        x: COL.dlvX + L.dlvW / 2,
+                        label: "DELIVERY",
+                        color: "#0d9488",
+                    },
+                    {
+                        x: COL.etlX + L.etlW / 2,
+                        label: "ETL PROCESS",
+                        color: "#2563eb",
+                    },
+                    {
+                        x: COL.srcX + L.srcW / 2,
+                        label: "DATA SOURCES",
+                        color: "#0891b2",
+                    },
+                    {
+                        x: COL.conX + L.conW / 2,
+                        label: "CONSUMER",
+                        color: "#8b5cf6",
+                    },
+                ];
+                for (const h of hdrData) {
+                    hdrs.appendChild(
+                        el("circle", {
+                            cx: h.x - 36,
+                            cy: 20,
+                            r: 4,
+                            fill: h.color,
+                        }),
+                    );
+                    hdrs.appendChild(
+                        text(
+                            h.x,
+                            20,
+                            h.label,
+                            10.5,
+                            "#9ca3af",
+                            "600",
+                            "middle",
+                            { "letter-spacing": "0.1em" },
+                        ),
+                    );
+                }
+                svg.appendChild(hdrs);
+
+                // ── Edge layer (skip intra-consumer edges — those are tree connectors) ─────────
+                const edgeLayer = el("g", { id: "edge-layer" });
+                for (const edge of S.edges) {
+                    // Skip edges where BOTH endpoints are consumers AND target is a child
+                    if (
+                        conIds.has(edge.source) &&
+                        conIds.has(edge.target) &&
+                        childConIds.has(edge.target)
+                    )
+                        continue;
+                    const sp = pos[edge.source];
+                    const tp = pos[edge.target];
+                    if (!sp || !tp) continue;
+                    const path = el("path", {
+                        d: bezierPath(
+                            sp.x + sp.w,
+                            sp.y + sp.h / 2,
+                            tp.x,
+                            tp.y + tp.h / 2,
+                        ),
+                        stroke: "#d1d8e0",
+                        "stroke-width": "1.5",
+                        fill: "none",
+                        "marker-end": "url(#arr)",
+                        "data-src": edge.source,
+                        "data-tgt": edge.target,
+                        class: "edge",
+                    });
+                    edgeLayer.appendChild(path);
+                }
+                svg.appendChild(edgeLayer);
+
+                // Helper: draw a group background box for a flat list of items
+                function groupBox(items, colX, colW, bg, border) {
+                    const ps = items.map((i) => pos[i.id]).filter(Boolean);
+                    if (!ps.length) return;
+                    const gTop =
+                        Math.min(...ps.map((p) => p.y)) - L.leftGroupPad;
+                    const gBot =
+                        Math.max(...ps.map((p) => p.y + p.h)) + L.leftGroupPad;
+                    return rect(
+                        colX - 8,
+                        gTop,
+                        colW + 16,
+                        gBot - gTop,
+                        12,
+                        bg,
+                        border,
+                        1.5,
+                    );
+                }
+
+                // ── Source System layer ─────────────────────────────────────────────────────────────
+                const sysLayer = el("g", { id: "sys-layer" });
+                const sysItems = CATALOG.sourceSystems || [];
+                if (sysItems.length) {
+                    const bg = groupBox(
+                        sysItems,
+                        COL.sysX,
+                        L.sysW,
+                        "#f0fdf4",
+                        "#6ee7b7",
+                    );
+                    if (bg) sysLayer.appendChild(bg);
+                    for (const item of sysItems)
+                        renderLeaf(sysLayer, item, pos[item.id]);
+                }
+                svg.appendChild(sysLayer);
+
+                // ── Delivery layer ──────────────────────────────────────────────────────────────────
+                const dlvLayer = el("g", { id: "dlv-layer" });
+                const dlvItems = CATALOG.deliveryMechanisms || [];
+                if (dlvItems.length) {
+                    const bg = groupBox(
+                        dlvItems,
+                        COL.dlvX,
+                        L.dlvW,
+                        "#f0fdfa",
+                        "#5eead4",
+                    );
+                    if (bg) dlvLayer.appendChild(bg);
+                    for (const item of dlvItems)
+                        renderLeaf(dlvLayer, item, pos[item.id]);
+                }
+                svg.appendChild(dlvLayer);
+
+                // ── ETL Process layer ──────────────────────────────────────────────────────────────
+                const etlLayer = el("g", { id: "etl-layer" });
+                const etlItems = CATALOG.etlProcesses || [];
+                if (etlItems.length) {
+                    const bg = groupBox(
+                        etlItems,
+                        COL.etlX,
+                        L.etlW,
+                        "#eff6ff",
+                        "#93c5fd",
+                    );
+                    if (bg) etlLayer.appendChild(bg);
+                    for (const item of etlItems)
+                        renderLeaf(etlLayer, item, pos[item.id]);
+                }
+                svg.appendChild(etlLayer);
+
+                // ── Data Source layer ────────────────────────────────────────────────────────────
+                const srcLayer = el("g", { id: "src-layer" });
+                for (const item of CATALOG.sourceTree) {
+                    if (item.type === "server_group")
+                        renderServer(srcLayer, item, pos);
+                    else renderLeaf(srcLayer, item, pos[item.id]);
+                }
+                svg.appendChild(srcLayer);
+
+                // ── Consumer layer ────────────────────────────────────────────────────────────────
+                const conLayer = el("g", { id: "con-layer" });
+
+                // Background box for all consumer nodes
+                const allConItems = [
+                    ...topLevel,
+                    ...topLevel.flatMap((t) => conChildren(t.id)),
+                ];
+                const allConPos = allConItems
+                    .map((c) => pos[c.id])
+                    .filter(Boolean);
+                if (allConPos.length) {
+                    const gTop =
+                        Math.min(...allConPos.map((p) => p.y)) - L.conGroupPad;
+                    const gBot =
+                        Math.max(...allConPos.map((p) => p.y + p.h)) +
+                        L.conGroupPad;
+                    conLayer.appendChild(
+                        rect(
+                            COL.conX - 8,
+                            gTop,
+                            L.conW + 16,
+                            gBot - gTop,
+                            12,
+                            "#faf5ff",
+                            "#ddd6fe",
+                            1.5,
+                        ),
+                    );
+                }
+
+                // Parent→child connector lines
+                for (const item of topLevel) {
+                    const ch = conChildren(item.id);
+                    if (!ch.length) continue;
+                    const pp = pos[item.id];
+                    if (!pp) continue;
+                    const lastP = pos[ch[ch.length - 1].id];
+                    if (!lastP) continue;
+                    const lineX = COL.conX + 7;
+                    // Vertical line from parent bottom to last child midpoint
+                    conLayer.appendChild(
+                        el("line", {
+                            x1: lineX,
+                            y1: pp.y + pp.h,
+                            x2: lineX,
+                            y2: lastP.y + lastP.h / 2,
+                            stroke: "#c4b5fd",
+                            "stroke-width": 1.5,
+                            "stroke-dasharray": "3 3",
+                            class: "con-connector",
+                        }),
+                    );
+                    // Horizontal stubs to each child
+                    for (const child of ch) {
+                        const cp = pos[child.id];
+                        if (!cp) continue;
+                        conLayer.appendChild(
+                            el("line", {
+                                x1: lineX,
+                                y1: cp.y + cp.h / 2,
+                                x2: cp.x,
+                                y2: cp.y + cp.h / 2,
+                                stroke: "#c4b5fd",
+                                "stroke-width": 1.5,
+                                "stroke-dasharray": "3 3",
+                                class: "con-connector",
+                            }),
+                        );
+                    }
+                }
+
+                // Render consumer nodes
+                for (const item of topLevel) {
+                    renderConsumer(conLayer, item, pos[item.id], false);
+                    for (const child of conChildren(item.id))
+                        renderConsumer(conLayer, child, pos[child.id], true);
+                }
+                svg.appendChild(conLayer);
+
+                updateMeta();
+                applyVisuals();
+            }
+
+            function renderServer(parent, srv, pos) {
+                const p = pos[srv.id];
+                if (!p) return;
+                const g = el("g", {
+                    "data-id": srv.id,
+                    class: "node-g server-g",
+                });
+
+                // Server body
+                g.appendChild(
+                    rect(p.x, p.y, p.w, p.h, L.srvR, "#f0fffe", "#67e8f9", 1.5),
+                );
+                // Header strip
+                g.appendChild(
+                    rect(
+                        p.x,
+                        p.y,
+                        p.w,
+                        L.srvHdrH,
+                        `${L.srvR} ${L.srvR} 0 0`,
+                        "#cffafe",
+                        "none",
+                        0,
+                    ),
+                );
+                // Server icon + label
+                g.appendChild(
+                    text(
+                        p.x + 11,
+                        p.y + L.srvHdrH / 2,
+                        "🗄",
+                        13,
+                        "#0e7490",
+                        "500",
+                    ),
+                );
+                g.appendChild(
+                    text(
+                        p.x + 29,
+                        p.y + L.srvHdrH / 2,
+                        trunc(srv.label, 32),
+                        12.5,
+                        "#0e7490",
+                        "600",
+                    ),
+                );
+
+                g.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    select(srv);
+                });
+                parent.appendChild(g);
+
+                for (const db of srv.databases || []) renderDb(parent, db, pos);
+            }
+
+            function renderDb(parent, db, pos) {
+                const p = pos[db.id];
+                if (!p) return;
+                const g = el("g", { "data-id": db.id, class: "node-g db-g" });
+
+                g.appendChild(
+                    rect(p.x, p.y, p.w, p.h, L.dbR, "#e0fffe", "#a5f3fc", 1.2),
+                );
+                // DB header
+                g.appendChild(
+                    text(
+                        p.x + 8,
+                        p.y + L.dbHdrH / 2,
+                        "◫",
+                        11,
+                        "#0891b2",
+                        "500",
+                    ),
+                );
+                g.appendChild(
+                    text(
+                        p.x + 20,
+                        p.y + L.dbHdrH / 2,
+                        trunc(db.label, 30),
+                        11.5,
+                        "#0e7490",
+                        "600",
+                    ),
+                );
+
+                g.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    select(db);
+                });
+                parent.appendChild(g);
+
+                for (const tbl of db.tables || [])
+                    renderLeaf(parent, tbl, pos[tbl.id]);
+            }
+
+            function renderLeaf(parent, node, p) {
+                if (!p) return;
+                const cfg = assetCfg(node.subtype);
+                const g = el("g", {
+                    "data-id": node.id,
+                    class: "node-g leaf-g",
+                });
+
+                // Card
+                const r = rect(p.x, p.y, p.w, p.h, 7, cfg.bg, cfg.border, 1.5);
+                r.classList.add("node-rect");
+                g.appendChild(r);
+                // Left accent
+                g.appendChild(
+                    rect(
+                        p.x,
+                        p.y,
+                        L.accentW,
+                        p.h,
+                        "3.5 0 0 3.5",
+                        cfg.color,
+                        "none",
+                        0,
+                    ),
+                );
+                // Icon
+                g.appendChild(
+                    text(
+                        p.x + 10,
+                        p.y + p.h / 2,
+                        cfg.icon,
+                        12,
+                        cfg.color,
+                        "500",
+                        "middle",
+                    ),
+                );
+                // Label
+                const maxC = Math.max(8, Math.floor((p.w - 34) / 7));
+                g.appendChild(
+                    text(
+                        p.x + 20,
+                        p.y + p.h / 2,
+                        trunc(node.label, maxC),
+                        12,
+                        "#1e293b",
+                        "500",
+                    ),
+                );
+
+                g.style.cursor = "pointer";
+                g.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    select(node);
+                });
+                g.addEventListener("mouseenter", () =>
+                    hoverNode(node.id, true),
+                );
+                g.addEventListener("mouseleave", () =>
+                    hoverNode(node.id, false),
+                );
+                parent.appendChild(g);
+            }
+
+            function renderProcess(parent, proc, p) {
+                if (!p) return;
+                const cfg = assetCfg(proc.subtype);
+                const g = el("g", {
+                    "data-id": proc.id,
+                    class: "node-g proc-g",
+                });
+
+                const r = rect(p.x, p.y, p.w, p.h, 9, cfg.bg, cfg.border, 1.5);
+                r.classList.add("node-rect");
+                g.appendChild(r);
+                // Top accent bar
+                g.appendChild(
+                    rect(p.x, p.y, p.w, 3, "9 9 0 0", cfg.color, "none", 0),
+                );
+                // Icon
+                g.appendChild(
+                    text(
+                        p.x + p.w / 2,
+                        p.y + 16,
+                        cfg.icon,
+                        14,
+                        cfg.color,
+                        "500",
+                        "middle",
+                    ),
+                );
+                // Label
+                g.appendChild(
+                    text(
+                        p.x + p.w / 2,
+                        p.y + 34,
+                        trunc(proc.label, 26),
+                        11.5,
+                        "#1e293b",
+                        "500",
+                        "middle",
+                    ),
+                );
+                // Subtype badge
+                const sw = proc.subtype.length * 5.8 + 10;
+                const sx = p.x + p.w - sw - 5;
+                g.appendChild(
+                    rect(
+                        sx,
+                        p.y + 5,
+                        sw,
+                        14,
+                        3,
+                        `${cfg.color}22`,
+                        `${cfg.color}55`,
+                        1,
+                    ),
+                );
+                g.appendChild(
+                    text(
+                        sx + sw / 2,
+                        p.y + 12,
+                        proc.subtype,
+                        8.5,
+                        cfg.color,
+                        "600",
+                        "middle",
+                    ),
+                );
+
+                g.style.cursor = "pointer";
+                g.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    select(proc);
+                });
+                g.addEventListener("mouseenter", () =>
+                    hoverNode(proc.id, true),
+                );
+                g.addEventListener("mouseleave", () =>
+                    hoverNode(proc.id, false),
+                );
+                parent.appendChild(g);
+            }
+
+            function renderReport(parent, rpt, p) {
+                if (!p) return;
+                const cfg = assetCfg(rpt.subtype);
+                const g = el("g", { "data-id": rpt.id, class: "node-g rpt-g" });
+
+                const r = rect(p.x, p.y, p.w, p.h, 9, cfg.bg, cfg.border, 1.5);
+                r.classList.add("node-rect");
+                g.appendChild(r);
+                // Left accent
+                g.appendChild(
+                    rect(
+                        p.x,
+                        p.y,
+                        L.accentW,
+                        p.h,
+                        "3.5 0 0 3.5",
+                        cfg.color,
+                        "none",
+                        0,
+                    ),
+                );
+                // Icon
+                g.appendChild(
+                    text(
+                        p.x + 13,
+                        p.y + 16,
+                        cfg.icon,
+                        14,
+                        cfg.color,
+                        "500",
+                        "middle",
+                    ),
+                );
+                // Label
+                const maxC = Math.max(8, Math.floor((p.w - 28) / 7));
+                g.appendChild(
+                    text(
+                        p.x + 22,
+                        p.y + 16,
+                        trunc(rpt.label, maxC),
+                        12.5,
+                        "#1e293b",
+                        "500",
+                    ),
+                );
+                // Owner
+                if (rpt.owner)
+                    g.appendChild(
+                        text(
+                            p.x + 22,
+                            p.y + 34,
+                            rpt.owner,
+                            10.5,
+                            "#9ca3af",
+                            "400",
+                        ),
+                    );
+
+                g.style.cursor = "pointer";
+                g.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    select(rpt);
+                });
+                g.addEventListener("mouseenter", () => hoverNode(rpt.id, true));
+                g.addEventListener("mouseleave", () =>
+                    hoverNode(rpt.id, false),
+                );
+                parent.appendChild(g);
+            }
+
+            // Renders a Consumer column node (process or report)
+            // isChild: true → rendered as an indented child under a parent process
+            function renderConsumer(parent, node, p, isChild) {
+                if (!p) return;
+                const cfg = assetCfg(node.subtype);
+                const g = el("g", {
+                    "data-id": node.id,
+                    class: "node-g con-g",
+                });
+
+                const r = rect(p.x, p.y, p.w, p.h, 9, cfg.bg, cfg.border, 1.5);
+                r.classList.add("node-rect");
+                g.appendChild(r);
+
+                if (isChild) {
+                    // Child: left accent + icon + label + owner
+                    g.appendChild(
+                        rect(
+                            p.x,
+                            p.y,
+                            L.accentW,
+                            p.h,
+                            "3.5 0 0 3.5",
+                            cfg.color,
+                            "none",
+                            0,
+                        ),
+                    );
+                    g.appendChild(
+                        text(
+                            p.x + 12,
+                            p.y + p.h / 2 - 6,
+                            cfg.icon,
+                            12,
+                            cfg.color,
+                            "500",
+                            "middle",
+                        ),
+                    );
+                    const maxC = Math.max(8, Math.floor((p.w - 28) / 7));
+                    g.appendChild(
+                        text(
+                            p.x + 22,
+                            p.y + p.h / 2 - 6,
+                            trunc(node.label, maxC),
+                            11.5,
+                            "#1e293b",
+                            "500",
+                        ),
+                    );
+                    if (node.owner)
+                        g.appendChild(
+                            text(
+                                p.x + 22,
+                                p.y + p.h / 2 + 8,
+                                trunc(node.owner, maxC),
+                                10,
+                                "#9ca3af",
+                                "400",
+                            ),
+                        );
+                } else {
+                    // Top-level: top accent bar + centered icon + label + subtype badge
+                    g.appendChild(
+                        rect(p.x, p.y, p.w, 3, "9 9 0 0", cfg.color, "none", 0),
+                    );
+                    g.appendChild(
+                        text(
+                            p.x + p.w / 2,
+                            p.y + 17,
+                            cfg.icon,
+                            14,
+                            cfg.color,
+                            "500",
+                            "middle",
+                        ),
+                    );
+                    g.appendChild(
+                        text(
+                            p.x + p.w / 2,
+                            p.y + 36,
+                            trunc(node.label, 28),
+                            11.5,
+                            "#1e293b",
+                            "500",
+                            "middle",
+                        ),
+                    );
+                    if (node.subtype) {
+                        const sw = node.subtype.length * 5.8 + 10;
+                        const sx = p.x + p.w - sw - 5;
+                        g.appendChild(
+                            rect(
+                                sx,
+                                p.y + 5,
+                                sw,
+                                14,
+                                3,
+                                `${cfg.color}22`,
+                                `${cfg.color}55`,
+                                1,
+                            ),
+                        );
+                        g.appendChild(
+                            text(
+                                sx + sw / 2,
+                                p.y + 12,
+                                node.subtype,
+                                8.5,
+                                cfg.color,
+                                "600",
+                                "middle",
+                            ),
+                        );
+                    }
+                }
+
+                g.style.cursor = "pointer";
+                g.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    select(node);
+                });
+                g.addEventListener("mouseenter", () =>
+                    hoverNode(node.id, true),
+                );
+                g.addEventListener("mouseleave", () =>
+                    hoverNode(node.id, false),
+                );
+                parent.appendChild(g);
+            }
+
+            // ─── Visual state ──────────────────────────────────────────────────────────────────
+            let _hoverTimeout;
+
+            function hoverNode(id, entering) {
+                if (S.selected) return; // don't override selection highlight
+                clearTimeout(_hoverTimeout);
+                if (entering) {
+                    const hSet = highlightSet(id);
+                    applyVisuals(hSet);
+                } else {
+                    _hoverTimeout = setTimeout(() => applyVisuals(), 80);
+                }
+            }
+
+            function applyVisuals(activeSet) {
+                const svg = document.getElementById("graph-svg");
+                if (!svg) return;
+
+                // Compute effective active set
+                const selSet = S.selected ? highlightSet(S.selected.id) : null;
+                const srchSet = searchSet();
+
+                let effective = activeSet || selSet;
+                if (srchSet) {
+                    effective = effective
+                        ? new Set(
+                              [...effective].filter((id) => srchSet.has(id)),
+                          )
+                        : srchSet;
+                }
+
+                const hasDim = !!effective;
+
+                // Nodes
+                svg.querySelectorAll(".node-g").forEach((g) => {
+                    const id = g.getAttribute("data-id");
+                    const vis = !hasDim || effective.has(id);
+                    g.style.opacity = vis ? "1" : "0.12";
+                });
+
+                // Edges
+                svg.querySelectorAll(".edge").forEach((e) => {
+                    const src = e.getAttribute("data-src");
+                    const tgt = e.getAttribute("data-tgt");
+                    const both =
+                        !hasDim || (effective.has(src) && effective.has(tgt));
+
+                    if (both && S.selected) {
+                        e.setAttribute("stroke", "#60a5fa");
+                        e.setAttribute("stroke-width", "2");
+                        e.setAttribute("opacity", "0.9");
+                        e.setAttribute("marker-end", "url(#arr-hl)");
+                    } else if (both) {
+                        e.setAttribute("stroke", "#c9d1da");
+                        e.setAttribute("stroke-width", "1.5");
+                        e.setAttribute("opacity", "1");
+                        e.setAttribute("marker-end", "url(#arr)");
+                    } else {
+                        e.setAttribute("stroke", "#e5e7eb");
+                        e.setAttribute("stroke-width", "1");
+                        e.setAttribute("opacity", "0.2");
+                        e.setAttribute("marker-end", "url(#arr)");
+                    }
+                });
+
+                // Selection ring
+                svg.querySelectorAll(".sel-ring").forEach((r) => r.remove());
+                if (S.selected) {
+                    const p = S.pos[S.selected.id];
+                    if (p) {
+                        const ring = rect(
+                            p.x - 3,
+                            p.y - 3,
+                            p.w + 6,
+                            p.h + 6,
+                            11,
+                            "none",
+                            "#3b82f6",
+                            2.5,
+                        );
+                        ring.classList.add("sel-ring");
+                        ring.style.pointerEvents = "none";
+                        svg.appendChild(ring);
+                    }
+                }
+            }
+
+            // ─── Detail panel ──────────────────────────────────────────────────────────
+            function select(node) {
+                S.selected = node;
+                showPanel(node);
+                applyVisuals();
+            }
+
+            function showPanel(node) {
+                const panel = document.getElementById("panel");
+                document.getElementById("empty").classList.add("hidden");
+                panel.classList.add("open");
+
+                const typeCfg = {
+                    source_system: { label: "Source System", color: "#059669" },
+                    delivery_mechanism: {
+                        label: "Delivery Mechanism",
+                        color: "#0d9488",
+                    },
+                    etl_process: { label: "ETL Process", color: "#2563eb" },
+                    source: { label: "Data Source", color: "#0891b2" },
+                    server_group: { label: "Server", color: "#0891b2" },
+                    database_group: { label: "Database", color: "#0891b2" },
+                    process: { label: "Consumer Process", color: "#d97706" },
+                    report: { label: "Consumer Report", color: "#7c3aed" },
+                };
+                const tc = typeCfg[node.type] || {
+                    label: node.type,
+                    color: "#64748b",
+                };
+                const sc = assetCfg(node.subtype || "");
+
+                // Badges
+                const badges = document.getElementById("panel-badges");
+                badges.innerHTML = `
+    <span style="font-size:18px;color:${sc.color};line-height:1;">${sc.icon}</span>
+    <span class="badge" style="background:${tc.color}18;color:${tc.color};border:1.5px solid ${tc.color}33;">${tc.label}</span>
+    ${node.subtype ? `<span style="font-size:11.5px;color:#9ca3af;">${node.subtype}</span>` : ""}
+  `;
+
+                document.getElementById("panel-name").textContent = node.label;
+                document.getElementById("panel-meta").textContent = [
+                    node.owner ? `Owner: ${node.owner}` : null,
+                    node.updated ? `Updated: ${node.updated}` : null,
+                ]
+                    .filter(Boolean)
+                    .join("  ·  ");
+
+                // Impact banner
+                const banner = document.getElementById("impact-banner");
+                if (S.impactMode) {
+                    const ds = allDownstream(node.id);
+                    ds.delete(node.id);
+                    const n = ds.size;
+                    if (n) {
+                        const nRpts = [...ds].filter(
+                            (id) => findNode(id)?.type === "report",
+                        ).length;
+                        banner.innerHTML = `⚡ <strong>${n} downstream asset${n !== 1 ? "s" : ""}</strong> impacted if this fails${nRpts ? ` — including ${nRpts} report${nRpts !== 1 ? "s" : ""}` : ""}`;
+                        banner.style.display = "block";
+                    } else {
+                        banner.style.display = "none";
+                    }
+                } else {
+                    banner.style.display = "none";
+                }
+
+                // Dep chips
+                const ups = upstream(node.id);
+                const downs = downstream(node.id);
+                document.getElementById("upstream-section").style.display =
+                    ups.length ? "" : "none";
+                document.getElementById("downstream-section").style.display =
+                    downs.length ? "" : "none";
+                fillChips("upstream-chips", ups);
+                fillChips("downstream-chips", downs);
+
+                // Docs
+                const docs = document.getElementById("docs-content");
+                if (node.docs) {
+                    docs.innerHTML = renderMd(node.docs);
+                } else {
+                    docs.innerHTML =
+                        '<p style="color:#9ca3af;font-size:13px;">No documentation provided.</p>';
+                }
+                document.getElementById("panel-docs").scrollTop = 0;
+            }
+
+            function fillChips(containerId, nodes) {
+                const el = document.getElementById(containerId);
+                el.innerHTML = "";
+                for (const n of nodes) {
+                    const cfg = assetCfg(n.subtype || "");
+                    const chip = document.createElement("button");
+                    chip.className = "chip";
+                    chip.innerHTML = `<span class="chip-dot" style="background:${cfg.color}"></span>${n.label}`;
+                    chip.onclick = () => select(n);
+                    el.appendChild(chip);
+                }
+            }
+
+            function closePanel() {
+                S.selected = null;
+                document.getElementById("panel").classList.remove("open");
+                document.getElementById("empty").classList.remove("hidden");
+                applyVisuals();
+            }
+
+            // ─── Minimal markdown renderer ─────────────────────────────────────────────
+            function renderMd(md) {
+                // Escape HTML
+                const e = (s) =>
+                    s
+                        .replace(/&/g, "&amp;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;");
+
+                // Tables
+                md = md.replace(
+                    /\|(.+)\|\n\|[-| :]+\|\n((?:\|.+\|\n?)*)/g,
+                    (_, hdr, rows) => {
+                        const ths = hdr
+                            .split("|")
+                            .filter((s) => s.trim())
+                            .map((s) => `<th>${e(s.trim())}</th>`)
+                            .join("");
+                        const trs = rows
+                            .trim()
+                            .split("\n")
+                            .map((row) => {
+                                const tds = row
+                                    .split("|")
+                                    .filter((s) => s.trim())
+                                    .map((s) => `<td>${e(s.trim())}</td>`)
+                                    .join("");
+                                return `<tr>${tds}</tr>`;
+                            })
+                            .join("");
+                        return `<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+                    },
+                );
+
+                // Code blocks
+                md = md.replace(
+                    /```[\w]*\n?([\s\S]*?)```/g,
+                    (_, code) => `<pre><code>${e(code.trim())}</code></pre>`,
+                );
+                // Inline code
+                md = md.replace(/`([^`]+)`/g, (_, c) => `<code>${e(c)}</code>`);
+                // Bold
+                md = md.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+                // Italic
+                md = md.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+                // Links
+                md = md.replace(
+                    /\[([^\]]+)\]\(([^)]+)\)/g,
+                    '<a href="$2" target="_blank">$1</a>',
+                );
+                // Headings
+                md = md.replace(/^### (.+)$/gm, "<h3>$1</h3>");
+                md = md.replace(/^## (.+)$/gm, "<h2>$1</h2>");
+                md = md.replace(/^# (.+)$/gm, "<h1>$1</h1>");
+                // Horizontal rules
+                md = md.replace(/^[-*_]{3,}$/gm, "<hr>");
+                // Blockquotes
+                md = md.replace(/^> (.+)$/gm, "<blockquote>$1</blockquote>");
+                // Unordered lists
+                md = md.replace(/((?:^- .+\n?)+)/gm, (m) => {
+                    const items = m
+                        .trim()
+                        .split("\n")
+                        .map((li) => `<li>${li.replace(/^- /, "")}</li>`)
+                        .join("");
+                    return `<ul>${items}</ul>`;
+                });
+                // Ordered lists
+                md = md.replace(/((?:^\d+\. .+\n?)+)/gm, (m) => {
+                    const items = m
+                        .trim()
+                        .split("\n")
+                        .map((li) => `<li>${li.replace(/^\d+\. /, "")}</li>`)
+                        .join("");
+                    return `<ol>${items}</ol>`;
+                });
+                // Paragraphs (wrap non-tag lines)
+                md = md
+                    .split("\n\n")
+                    .map((block) => {
+                        block = block.trim();
+                        if (!block) return "";
+                        if (/^<[htupbo]/.test(block)) return block;
+                        return `<p>${block}</p>`;
+                    })
+                    .join("\n");
+
+                return md;
+            }
+
+            // ─── Helpers ──────────────────────────────────────────────────────────────────
+            function updateMeta() {
+                const m = CATALOG.meta?.counts || {};
+                const parts = [
+                    m.source_systems && `${m.source_systems} systems`,
+                    m.sources && `${m.sources} sources`,
+                    m.processes && `${m.processes} processes`,
+                    m.reports && `${m.reports} reports`,
+                    m.edges && `${m.edges} edges`,
+                ].filter(Boolean);
+                if (CATALOG.meta?.generated) {
+                    const d = new Date(CATALOG.meta.generated);
+                    parts.push(`Updated ${d.toLocaleDateString()}`);
+                }
+                document.getElementById("hdr-meta").textContent =
+                    parts.join(" · ");
+            }
+
+            // ─── Events ────────────────────────────────────────────────────────────────
+            document
+                .getElementById("graph-svg")
+                .addEventListener("click", closePanel);
+
+            document
+                .getElementById("panel-close")
+                .addEventListener("click", closePanel);
+
+            document
+                .getElementById("impact-btn")
+                .addEventListener("click", () => {
+                    S.impactMode = !S.impactMode;
+                    const btn = document.getElementById("impact-btn");
+                    btn.classList.toggle("on", S.impactMode);
+                    if (S.selected) showPanel(S.selected);
+                    applyVisuals();
+                });
+
+            document.getElementById("search").addEventListener("input", (e) => {
+                S.search = e.target.value.trim();
+                applyVisuals();
+            });
+
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") closePanel();
+            });
+
+            // ─── Init ──────────────────────────────────────────────────────────────────
+            window.addEventListener("DOMContentLoaded", () => {
+                if (typeof CATALOG === "undefined") {
+                    document.getElementById("graph-svg").innerHTML =
+                        '<text x="24" y="40" fill="#dc2626" font-size="14" font-family="system-ui">catalog.js not found — run: python bundle.py</text>';
+                    document.getElementById("hdr-meta").textContent =
+                        "catalog.js missing";
+                    return;
+                }
+                render();
+            });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,67 @@
+# dependencies.yaml
+# Defines the data lineage edges between assets.
+#
+# Format:
+#   - source: <id of the upstream asset>
+#     target: <id of the downstream asset>
+#
+# IDs must match the `id` field in each asset's markdown frontmatter.
+# Run `python bundle.py` after editing this file to regenerate catalog.js.
+#
+# Column flow (left → right):
+#   Source System → Delivery Mechanism → ETL Process → Data Sources → Consumer
+
+edges:
+  # ── Source Systems → Delivery Mechanisms ──────────────────────────────────
+  - source: sys_order_mgmt
+    target: dlv_sql_repl
+  - source: sys_hris
+    target: dlv_sql_repl
+  - source: sys_salesforce
+    target: dlv_api_pull
+  - source: sys_finance_erp
+    target: dlv_sftp
+
+  # ── Delivery Mechanisms → ETL Processes ───────────────────────────────────
+  - source: dlv_sql_repl
+    target: etl_sales_hr_load
+  - source: dlv_api_pull
+    target: etl_crm_pull
+  - source: dlv_sftp
+    target: etl_fin_load
+
+  # ── ETL Processes → Data Sources ──────────────────────────────────────────
+  - source: etl_sales_hr_load
+    target: tbl_orders
+  - source: etl_sales_hr_load
+    target: tbl_customers
+  - source: etl_sales_hr_load
+    target: tbl_employees
+  - source: etl_crm_pull
+    target: src_crm_api
+  - source: etl_fin_load
+    target: src_finance_export
+
+  # ── Data Sources → Consumer Processes ─────────────────────────────────────
+  - source: tbl_orders
+    target: proc_sales_etl
+  - source: tbl_customers
+    target: proc_sales_etl
+  - source: src_crm_api
+    target: proc_sales_etl
+  - source: tbl_employees
+    target: proc_hr_sproc
+  - source: src_finance_export
+    target: proc_finance_load
+
+  # ── Consumer Processes → Reports (intra-Consumer; rendered as child tree) ─
+  - source: proc_sales_etl
+    target: rpt_monthly_sales
+  - source: proc_sales_etl
+    target: rpt_exec_dashboard
+  - source: proc_sales_etl
+    target: rpt_sales_detail
+  - source: proc_hr_sproc
+    target: rpt_headcount
+  - source: proc_finance_load
+    target: rpt_pl_dashboard
