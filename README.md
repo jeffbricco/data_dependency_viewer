@@ -163,6 +163,21 @@ Useful flags: `--host` (network name if it differs from the folder name),
 `--sql-auth` (use `CATALOG_DB_USER`/`CATALOG_DB_PASSWORD` env vars instead of
 Windows auth), `--dry-run`, `--refresh` (re-pull column grids, keep your prose).
 
+**Permissions:** reads only `sys.*` catalog views — never your table data. SQL
+Server metadata visibility means a login sees catalog metadata only for objects
+it has a permission on, so the script self-limits to your access:
+
+| Your access | What to grant | You get |
+|---|---|---|
+| A few views | nothing extra (existing `SELECT`) | placeholders for just those views |
+| Whole DB, no data | `GRANT VIEW DEFINITION` (db-scoped) | all object metadata, no data |
+| Whole DB | `db_datareader` role | everything incl. reliable row counts |
+
+Row counts come from `sys.partitions` (a catalog view), so **no `VIEW DATABASE
+STATE` is required**; if it's blocked the script continues with counts = 0. A
+metadata error on one database is logged and skipped, so mixing high- and
+low-access databases in one run is safe.
+
 ### `scripts/scan_ssrs.py` — SSRS report placeholders
 
 Points at a folder of `.rdl` files and writes `reports/<name>.md` for each,

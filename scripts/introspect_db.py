@@ -13,6 +13,23 @@ It is SAFE TO RE-RUN: existing files are left untouched (so your hand-written
 docs are never lost) unless you pass --refresh, which rewrites only the
 tool-owned AUTO section of the body and leaves your prose + frontmatter alone.
 
+Permissions
+-----------
+Reads ONLY system catalog views (sys.tables/views/columns/...) — no user table
+data is ever read. SQL Server metadata-visibility rules do the access control
+for you: a login sees catalog metadata only for objects it holds a permission
+on, so the script self-limits to what you can access.
+
+  * Few-views login   : SELECT on those views is enough — only they appear.
+  * Whole database     : GRANT VIEW DEFINITION (db-scoped), no data access; or
+                         add the user to db_datareader.
+  * Row counts         : taken from sys.partitions (a catalog view), so NO
+                         VIEW DATABASE/SERVER STATE is required. If even that is
+                         blocked the script continues with row counts = 0.
+
+A metadata error on one database is logged and skipped; the run continues with
+the rest. So pointing it at a mix of high- and low-access databases is fine.
+
 Connection
 ----------
 Uses pyodbc with the Microsoft ODBC Driver and Windows / Integrated auth by
@@ -56,12 +73,22 @@ TODAY = date.today().isoformat()
 
 
 # ─── SQL queries ──────────────────────────────────────────────────────────────
+#
+# Everything here reads only system catalog views — no user table data is read.
+# SQL Server's metadata-visibility rules mean a low-privilege login automatically
+# sees ONLY the objects it holds a permission on (e.g. SELECT on a few views), so
+# the script self-limits to what you can access without any special handling.
+#
+# Row counts come from sys.partitions, a CATALOG view governed by the same
+# metadata visibility — it does NOT require VIEW DATABASE/SERVER STATE the way
+# the sys.dm_db_partition_stats DMV does. If even that is blocked, OBJECTS_SQL
+# falls back to OBJECTS_SQL_NOCOUNT (objects only, row count reported as 0).
 
-OBJECTS_SQL = """
+_OBJECTS_TEMPLATE = """
 SELECT s.name AS schema_name,
        t.name AS object_name,
        CASE WHEN t.type = 'V' THEN 'View' ELSE 'Table' END AS object_type,
-       CAST(ISNULL(p.row_count, 0) AS BIGINT) AS row_count,
+       {row_count} AS row_count,
        CAST(ep.value AS NVARCHAR(MAX)) AS description
 FROM (
     SELECT object_id, name, schema_id, 'U' AS type FROM sys.tables
@@ -69,15 +96,26 @@ FROM (
     SELECT object_id, name, schema_id, 'V' AS type FROM sys.views
 ) t
 JOIN sys.schemas s ON s.schema_id = t.schema_id
-OUTER APPLY (
-    SELECT SUM(row_count) AS row_count
-    FROM sys.dm_db_partition_stats ps
-    WHERE ps.object_id = t.object_id AND ps.index_id IN (0, 1)
-) p
+{row_count_join}
 LEFT JOIN sys.extended_properties ep
     ON ep.major_id = t.object_id AND ep.minor_id = 0 AND ep.name = 'MS_Description'
 ORDER BY object_type, s.name, t.name
 """
+
+OBJECTS_SQL = _OBJECTS_TEMPLATE.format(
+    row_count="CAST(ISNULL(p.row_count, 0) AS BIGINT)",
+    row_count_join=(
+        "OUTER APPLY (\n"
+        "    SELECT SUM(pt.rows) AS row_count\n"
+        "    FROM sys.partitions pt\n"
+        "    WHERE pt.object_id = t.object_id AND pt.index_id IN (0, 1)\n"
+        ") p"
+    ),
+)
+
+OBJECTS_SQL_NOCOUNT = _OBJECTS_TEMPLATE.format(
+    row_count="CAST(0 AS BIGINT)", row_count_join=""
+)
 
 COLUMNS_SQL = """
 SELECT s.name AS schema_name,
@@ -256,7 +294,13 @@ def ensure_object_md(db_dir, database, obj, columns, dry_run, force, refresh):
 
 def process_database(conn, server_dir, database, server_name, args):
     cur = conn.cursor()
-    cur.execute(OBJECTS_SQL)
+    try:
+        cur.execute(OBJECTS_SQL)
+    except Exception as exc:  # e.g. sys.partitions blocked — drop row counts
+        print(f"  [warn] row-count query failed ({exc}); "
+              f"continuing without row counts")
+        cur = conn.cursor()
+        cur.execute(OBJECTS_SQL_NOCOUNT)
     objects = []
     for row in cur.fetchall():
         if row.object_type == "View" and not args.include_views:
@@ -331,6 +375,8 @@ def main():
             continue
         try:
             process_database(conn, server_dir, database, args.server, args)
+        except Exception as exc:  # permission/metadata error — skip this DB
+            print(f"  [error] could not read metadata from {database}: {exc}")
         finally:
             conn.close()
 
