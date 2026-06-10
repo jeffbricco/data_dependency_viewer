@@ -4,6 +4,9 @@ label: Headcount Report
 subtype: SSRS
 owner: HR
 updated: 2026-03-20
+criticality: Medium
+depends_on:
+  - proc_hr_sproc
 ---
 
 ## Headcount Report

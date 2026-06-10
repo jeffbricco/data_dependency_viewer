@@ -4,6 +4,9 @@ label: P&L Dashboard
 subtype: PowerBI
 owner: Finance BI
 updated: 2026-04-06
+criticality: High
+depends_on:
+  - proc_finance_load
 ---
 
 ## P&L Dashboard

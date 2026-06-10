@@ -4,6 +4,9 @@ label: Sales Detail Drillthrough
 subtype: SSRS
 owner: Sales Ops
 updated: 2026-04-22
+criticality: Low
+depends_on:
+  - proc_sales_etl
 ---
 
 ## Sales Detail Drillthrough

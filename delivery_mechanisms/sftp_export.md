@@ -4,6 +4,8 @@ label: SFTP Export
 subtype: SFTP
 owner: Finance IT
 updated: 2026-01-25
+depends_on:
+  - sys_finance_erp
 ---
 
 ## SFTP Export

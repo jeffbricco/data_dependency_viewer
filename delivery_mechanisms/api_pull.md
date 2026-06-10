@@ -4,6 +4,8 @@ label: REST API Pull
 subtype: API Pull
 owner: Data Engineering
 updated: 2026-03-10
+depends_on:
+  - sys_salesforce
 ---
 
 ## REST API Pull

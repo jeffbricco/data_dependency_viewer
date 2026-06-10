@@ -4,6 +4,9 @@ label: dbo.Customers
 subtype: Table
 owner: DBA Team
 updated: 2026-02-14
+criticality: Medium
+depends_on:
+  - etl_sales_hr_load
 ---
 
 ## dbo.Customers

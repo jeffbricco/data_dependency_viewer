@@ -4,6 +4,9 @@ label: SSIS Sales & HR Load
 subtype: SSIS
 owner: Data Engineering
 updated: 2026-03-01
+criticality: High
+depends_on:
+  - dlv_sql_repl
 ---
 
 ## SSIS Sales & HR Load

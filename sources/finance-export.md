@@ -4,6 +4,9 @@ label: Finance Export (SAP)
 subtype: File/CSV
 owner: Finance
 updated: 2026-04-28
+criticality: Medium
+depends_on:
+  - etl_fin_load
 ---
 
 ## Finance Export (SAP)

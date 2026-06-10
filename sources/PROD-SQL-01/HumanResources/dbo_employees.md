@@ -4,6 +4,9 @@ label: dbo.Employees
 subtype: Table
 owner: IT Ops
 updated: 2026-03-15
+criticality: Critical
+depends_on:
+  - etl_sales_hr_load
 ---
 
 ## dbo.Employees

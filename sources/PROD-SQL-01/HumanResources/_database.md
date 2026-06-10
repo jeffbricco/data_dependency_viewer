@@ -3,6 +3,7 @@ id: db_humanresources
 label: HumanResources
 owner: IT Ops
 updated: 2026-03-15
+criticality: Critical
 ---
 
 ## HumanResources

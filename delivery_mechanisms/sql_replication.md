@@ -4,6 +4,9 @@ label: SQL Replication
 subtype: Replication
 owner: Data Engineering
 updated: 2026-02-01
+depends_on:
+  - sys_order_mgmt
+  - sys_hris
 ---
 
 ## SQL Replication

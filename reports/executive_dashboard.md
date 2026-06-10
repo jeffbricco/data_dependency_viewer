@@ -4,6 +4,9 @@ label: Executive Dashboard
 subtype: PowerBI
 owner: BI Team
 updated: 2026-05-01
+criticality: Critical
+depends_on:
+  - proc_sales_etl
 ---
 
 ## Executive Dashboard

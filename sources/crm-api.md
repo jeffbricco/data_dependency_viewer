@@ -4,6 +4,9 @@ label: CRM API
 subtype: REST API
 owner: Sales Ops
 updated: 2026-04-10
+criticality: Medium
+depends_on:
+  - etl_crm_pull
 ---
 
 ## CRM API (Salesforce)

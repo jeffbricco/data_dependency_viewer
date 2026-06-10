@@ -4,6 +4,9 @@ label: sp_HRSummary
 subtype: Stored Proc
 owner: IT Ops
 updated: 2026-02-10
+criticality: High
+depends_on:
+  - tbl_employees
 ---
 
 ## sp_HRSummary

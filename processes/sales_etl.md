@@ -4,6 +4,11 @@ label: sales_etl.py
 subtype: Python
 owner: Data Engineering
 updated: 2026-04-20
+criticality: High
+depends_on:
+  - tbl_orders
+  - tbl_customers
+  - src_crm_api
 ---
 
 ## sales_etl.py

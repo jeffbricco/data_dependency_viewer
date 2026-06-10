@@ -969,6 +969,19 @@
                 return ASSET[subtype] || ASSET["Source"];
             }
 
+            // Criticality levels → color. Surfaced as a node corner dot and a
+            // labeled pill in the detail panel.
+            const CRIT = {
+                Critical: { color: "#dc2626", label: "Critical" },
+                High: { color: "#ea580c", label: "High" },
+                Medium: { color: "#ca8a04", label: "Medium" },
+                Low: { color: "#64748b", label: "Low" },
+            };
+
+            function critCfg(level) {
+                return level ? CRIT[level] || null : null;
+            }
+
             // ─── SVG helpers ───────────────────────────────────────────────────────────
             const NS = "http://www.w3.org/2000/svg";
 
@@ -1116,6 +1129,7 @@
                         (n.label || "").toLowerCase().includes(q) ||
                         (n.subtype || "").toLowerCase().includes(q) ||
                         (n.owner || "").toLowerCase().includes(q) ||
+                        (n.criticality || "").toLowerCase().includes(q) ||
                         (n.docs || "").toLowerCase().includes(q)
                     ) {
                         matched.add(n.id);
@@ -1639,6 +1653,45 @@
                         renderConsumer(conLayer, child, pos[child.id], true);
                 }
                 svg.appendChild(conLayer);
+
+                // Criticality corner markers — one colored dot per node that
+                // declares a criticality, appended into each node group so it
+                // dims together with the node.
+                const critById = {};
+                const mark = (n) => {
+                    if (n && n.id && n.criticality)
+                        critById[n.id] = n.criticality;
+                };
+                (CATALOG.sourceSystems || []).forEach(mark);
+                (CATALOG.deliveryMechanisms || []).forEach(mark);
+                (CATALOG.etlProcesses || []).forEach(mark);
+                (CATALOG.processes || []).forEach(mark);
+                (CATALOG.reports || []).forEach(mark);
+                for (const s of CATALOG.sourceTree || []) {
+                    mark(s);
+                    for (const db of s.databases || []) {
+                        mark(db);
+                        for (const t of db.tables || []) mark(t);
+                    }
+                }
+                svg.querySelectorAll(".node-g").forEach((g) => {
+                    const c = critCfg(critById[g.getAttribute("data-id")]);
+                    const p = S.pos[g.getAttribute("data-id")];
+                    if (!c || !p) return;
+                    const dot = el("circle", {
+                        cx: p.x + p.w - 9,
+                        cy: p.y + 9,
+                        r: 5,
+                        fill: c.color,
+                        stroke: "#fff",
+                        "stroke-width": 1.5,
+                        class: "crit-dot",
+                    });
+                    const tip = el("title");
+                    tip.textContent = "Criticality: " + c.label;
+                    dot.appendChild(tip);
+                    g.appendChild(dot);
+                });
 
                 updateMeta();
                 applyVisuals();
@@ -2204,11 +2257,13 @@
                 const sc = assetCfg(node.subtype || "");
 
                 // Badges
+                const cc = critCfg(node.criticality);
                 const badges = document.getElementById("panel-badges");
                 badges.innerHTML = `
     <span style="font-size:18px;color:${sc.color};line-height:1;">${sc.icon}</span>
     <span class="badge" style="background:${tc.color}18;color:${tc.color};border:1.5px solid ${tc.color}33;">${tc.label}</span>
     ${node.subtype ? `<span style="font-size:11.5px;color:#9ca3af;">${node.subtype}</span>` : ""}
+    ${cc ? `<span class="badge" style="background:${cc.color};color:#fff;border:1.5px solid ${cc.color};font-weight:700;">⚠ ${cc.label}</span>` : ""}
   `;
 
                 document.getElementById("panel-name").textContent = node.label;

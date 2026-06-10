@@ -4,6 +4,9 @@ label: finance_load.sql
 subtype: SQL Script
 owner: Finance BI
 updated: 2026-04-05
+criticality: Medium
+depends_on:
+  - src_finance_export
 ---
 
 ## finance_load.sql

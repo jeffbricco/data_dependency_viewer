@@ -4,6 +4,9 @@ label: Finance File Load
 subtype: SSIS
 owner: Data Engineering
 updated: 2026-02-15
+criticality: Medium
+depends_on:
+  - dlv_sftp
 ---
 
 ## Finance File Load

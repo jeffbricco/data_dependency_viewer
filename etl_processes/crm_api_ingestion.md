@@ -4,6 +4,9 @@ label: CRM API Ingestion
 subtype: Python
 owner: Data Engineering
 updated: 2026-03-15
+criticality: Medium
+depends_on:
+  - dlv_api_pull
 ---
 
 ## CRM API Ingestion

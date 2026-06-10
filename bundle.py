@@ -32,11 +32,19 @@ Folder structure expected:
     dependencies.yaml            ← edge definitions
 
 Markdown frontmatter fields:
-    id       (required) unique identifier used in dependencies.yaml
-    label    display name (defaults to filename stem)
-    subtype  e.g. Table, View, REST API, Python, SSRS, PowerBI (required for leaf nodes)
-    owner    team or person responsible
-    updated  YYYY-MM-DD of last update
+    id           (required) unique identifier used for lineage edges
+    label        display name (defaults to filename stem)
+    subtype      e.g. Table, View, REST API, Python, SSRS, PowerBI (leaf nodes)
+    owner        team or person responsible
+    updated      YYYY-MM-DD of last update
+    criticality  Critical | High | Medium | Low — surfaced prominently in the UI
+    depends_on   list of upstream/parent asset IDs (manual, authoritative)
+    depends_on_auto  list of parent IDs inferred by a tool (e.g. scan_ssrs.py);
+                     kept separate so re-scans never clobber manual edits
+
+dependencies.yaml is GENERATED from depends_on / depends_on_auto on every run —
+do not edit it by hand. Declare lineage on each asset (parents only); the child
+listing its parent is enough to draw the edge.
 """
 
 import json
@@ -65,16 +73,53 @@ except ImportError:
     HAS_PYYAML = False
 
     def parse_yaml_block(text):
-        """Minimal YAML scalar parser (no lists, no nested objects)."""
+        """Minimal YAML parser: scalars + simple lists (block or inline).
+
+        Supports:
+            key: value
+            key: [a, b, c]          # inline list
+            key:                    # block list
+              - a
+              - b
+        No nested objects.
+        """
         meta = {}
-        for line in text.strip().splitlines():
-            line = line.strip()
+        lines = text.strip().splitlines()
+        i = 0
+        while i < len(lines):
+            raw = lines[i]
+            line = raw.strip()
+            i += 1
             if not line or line.startswith("#"):
                 continue
-            if ":" in line:
-                key, _, val = line.partition(":")
-                val = val.strip().strip("\"'")
-                meta[key.strip()] = val
+            # Block-list item belonging to the previous key is handled in the
+            # look-ahead below, so a stray "- " here is ignored.
+            if line.startswith("- "):
+                continue
+            if ":" not in line:
+                continue
+            key, _, val = line.partition(":")
+            key = key.strip()
+            val = val.split(" #", 1)[0].strip()  # strip trailing comments
+            if val.startswith("[") and val.endswith("]"):
+                # inline list
+                items = [s.strip().strip("\"'") for s in val[1:-1].split(",")]
+                meta[key] = [s for s in items if s]
+            elif val == "":
+                # possible block list — consume following "  - item" lines
+                items = []
+                while i < len(lines):
+                    nxt = lines[i].strip()
+                    if nxt.startswith("- "):
+                        items.append(nxt[2:].strip().strip("\"'"))
+                        i += 1
+                    elif nxt == "" or nxt.startswith("#"):
+                        i += 1
+                    else:
+                        break
+                meta[key] = items if items else ""
+            else:
+                meta[key] = val.strip("\"'")
         return meta
 
     def load_yaml_file(path):
@@ -123,6 +168,42 @@ def make_id(path_stem):
     return re.sub(r"[^a-z0-9_]", "_", path_stem.lower())
 
 
+# Recognized criticality values (ordered most → least critical).
+CRITICALITY_LEVELS = ["Critical", "High", "Medium", "Low"]
+
+
+def norm_criticality(meta):
+    """Normalize the criticality frontmatter value to a known level or ''."""
+    raw = str(meta.get("criticality", "")).strip()
+    if not raw:
+        return ""
+    for lvl in CRITICALITY_LEVELS:
+        if raw.lower() == lvl.lower():
+            return lvl
+    return raw  # unrecognized — pass through verbatim
+
+
+def as_list(val):
+    """Coerce a frontmatter value into a clean list of strings."""
+    if val is None or val == "":
+        return []
+    if isinstance(val, str):
+        return [val.strip()] if val.strip() else []
+    if isinstance(val, (list, tuple)):
+        return [str(v).strip() for v in val if str(v).strip()]
+    return []
+
+
+def parents_of(meta):
+    """Combined upstream parent IDs: manual depends_on + auto depends_on_auto."""
+    seen, out = set(), []
+    for v in as_list(meta.get("depends_on")) + as_list(meta.get("depends_on_auto")):
+        if v not in seen:
+            seen.add(v)
+            out.append(v)
+    return out
+
+
 # ─── Source tree builder ──────────────────────────────────────────────────────
 
 
@@ -153,6 +234,8 @@ def build_server_group(server_dir):
         "label": meta.get("label", server_dir.name),
         "owner": meta.get("owner", ""),
         "updated": str(meta.get("updated", "")),
+        "criticality": norm_criticality(meta),
+        "parents": parents_of(meta),
         "docs": docs,
         "databases": [],
     }
@@ -175,6 +258,8 @@ def build_database_group(db_dir, default_owner=""):
         "label": meta.get("label", db_dir.name),
         "owner": meta.get("owner", default_owner),
         "updated": str(meta.get("updated", "")),
+        "criticality": norm_criticality(meta),
+        "parents": parents_of(meta),
         "docs": docs,
         "tables": [],
     }
@@ -191,6 +276,8 @@ def build_database_group(db_dir, default_owner=""):
                 "label": meta_t.get("label", tbl_file.stem),
                 "owner": meta_t.get("owner", db["owner"]),
                 "updated": str(meta_t.get("updated", "")),
+                "criticality": norm_criticality(meta_t),
+                "parents": parents_of(meta_t),
                 "docs": docs_t,
             }
         )
@@ -207,6 +294,8 @@ def build_flat_source(md_file):
         "label": meta.get("label", md_file.stem),
         "owner": meta.get("owner", ""),
         "updated": str(meta.get("updated", "")),
+        "criticality": norm_criticality(meta),
+        "parents": parents_of(meta),
         "docs": docs,
     }
 
@@ -230,6 +319,8 @@ def read_nodes(folder, default_type):
                 "label": meta.get("label", f.stem),
                 "owner": meta.get("owner", ""),
                 "updated": str(meta.get("updated", "")),
+                "criticality": norm_criticality(meta),
+                "parents": parents_of(meta),
                 "docs": docs,
             }
         )
@@ -277,6 +368,58 @@ def collect_all_ids(
     return ids
 
 
+def iter_all_nodes(source_tree, *node_lists):
+    """Yield every node dict in the catalog (groups, tables, and flat nodes)."""
+    for item in source_tree:
+        yield item
+        if item["type"] == "server_group":
+            for db in item.get("databases", []):
+                yield db
+                for tbl in db.get("tables", []):
+                    yield tbl
+    for lst in node_lists:
+        for n in lst:
+            yield n
+
+
+def collect_edges_from_parents(source_tree, *node_lists):
+    """Build lineage edges from each node's `parents` (upstream) declarations.
+
+    Each parent P of node N becomes an edge P → N. Children only declare their
+    parents; the edge list is reconstructed here so dependencies.yaml never has
+    to be hand-maintained. Duplicate edges are collapsed; order is stable.
+    """
+    seen, edges = set(), []
+    for node in iter_all_nodes(source_tree, *node_lists):
+        target = node["id"]
+        for src in node.get("parents", []):
+            key = (src, target)
+            if key not in seen:
+                seen.add(key)
+                edges.append({"source": src, "target": target})
+    return edges
+
+
+def write_dependencies_yaml(path, edges):
+    """Write the generated dependencies.yaml (derived from per-file depends_on)."""
+    lines = [
+        "# dependencies.yaml — AUTO-GENERATED by bundle.py. DO NOT EDIT BY HAND.",
+        "#",
+        "# Lineage is declared per-asset via the `depends_on:` (manual) and",
+        "# `depends_on_auto:` (tool-inferred) frontmatter keys in each .md file.",
+        "# Each parent listed there produces one `source -> target` edge below.",
+        "# Re-run `python bundle.py` to regenerate.",
+        "",
+        "edges:",
+    ]
+    for e in edges:
+        lines.append(f"  - source: {e['source']}")
+        lines.append(f"    target: {e['target']}")
+    lines.append("")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+
+
 def validate(edges, known_ids):
     errors = []
     for e in edges:
@@ -317,16 +460,17 @@ def main():
     print("Reading reports…")
     reports = read_nodes("reports", "report")
 
-    print("Reading dependencies…")
-    dep_file = BASE_DIR / "dependencies.yaml"
-    if dep_file.exists():
-        dep_data = load_yaml_file(dep_file)
-        edges = dep_data.get("edges", []) if isinstance(dep_data, dict) else []
-    else:
-        print("  [warn] dependencies.yaml not found — no edges will be set")
-        edges = []
+    print("Building dependencies from per-file depends_on…")
+    edges = collect_edges_from_parents(
+        source_tree,
+        processes,
+        reports,
+        source_systems,
+        delivery_mechanisms,
+        etl_processes,
+    )
 
-    # Validate
+    # Validate that every referenced parent ID resolves to a real asset.
     known_ids = collect_all_ids(
         source_tree,
         processes,
@@ -337,15 +481,21 @@ def main():
     )
     errors = validate(edges, known_ids)
     if errors:
-        print("\nValidation errors:")
+        print("\nValidation errors (check depends_on values in your .md files):")
         for e in errors:
             print(e)
         if check_only:
             sys.exit(1)
-        print("  [warn] Continuing despite errors — fix IDs in dependencies.yaml\n")
+        print("  [warn] Continuing despite errors — fix depends_on in the .md files\n")
     elif check_only:
-        print("✓ All edge IDs are valid")
+        print(f"✓ All {len(edges)} dependency edge(s) resolve to known assets")
         return
+
+    # Regenerate dependencies.yaml as a readable artifact (single source of
+    # truth lives in the .md files; this file is derived).
+    dep_file = BASE_DIR / "dependencies.yaml"
+    write_dependencies_yaml(dep_file, edges)
+    print(f"  ✓ dependencies.yaml regenerated ({len(edges)} edges)")
 
     # Count leaf sources
     n_source_systems = len(source_systems)

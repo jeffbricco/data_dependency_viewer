@@ -4,6 +4,9 @@ label: dbo.Orders
 subtype: Table
 owner: DBA Team
 updated: 2026-03-20
+criticality: High
+depends_on:
+  - etl_sales_hr_load
 ---
 
 ## dbo.Orders

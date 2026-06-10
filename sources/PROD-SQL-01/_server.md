@@ -3,6 +3,7 @@ id: srv_prod_sql_01
 label: PROD-SQL-01
 owner: DBA Team
 updated: 2026-04-01
+criticality: Critical
 ---
 
 ## PROD-SQL-01

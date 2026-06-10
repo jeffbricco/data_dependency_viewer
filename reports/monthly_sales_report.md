@@ -4,6 +4,9 @@ label: Monthly Sales Report
 subtype: SSRS
 owner: Sales Ops
 updated: 2026-04-22
+criticality: High
+depends_on:
+  - proc_sales_etl
 ---
 
 ## Monthly Sales Report

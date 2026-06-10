@@ -3,6 +3,7 @@ id: db_salesoltp
 label: SalesOLTP
 owner: DBA Team
 updated: 2026-04-01
+criticality: High
 ---
 
 ## SalesOLTP
