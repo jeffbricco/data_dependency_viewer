@@ -803,7 +803,7 @@
                 dbGap: 8,
                 dbIndent: 10,
                 dbCollapsedH: 30, // height of a collapsed database (header only)
-                collapseThreshold: 12, // tables above this → collapsed on load
+                dbToggleW: 30, // width of the collapse-toggle hit area
                 leafH: 36,
                 leafGap: 5,
                 leafIndent: 20,
@@ -1084,15 +1084,15 @@
                 }
             }
 
-            // On first load, collapse any database with a lot of tables so the
-            // graph isn't dominated by one giant column.
+            // On first load, collapse every database so the graph opens compact;
+            // expand the ones you want via the chevrons or "Expand all".
             function initCollapseDefaults() {
                 if (S.collapseInit) return;
                 S.collapseInit = true;
                 for (const item of CATALOG.sourceTree || []) {
                     if (item.type !== "server_group") continue;
                     for (const db of item.databases || [])
-                        if ((db.tables || []).length > L.collapseThreshold)
+                        if ((db.tables || []).length > 0)
                             S.collapsed.add(db.id);
                 }
             }
@@ -1856,24 +1856,19 @@
                     rect(p.x, p.y, p.w, p.h, L.dbR, "#e0fffe", "#a5f3fc", 1.2),
                 );
 
-                // Chevron toggle (only meaningful when the DB has tables)
-                let chevron = null;
+                // Chevron indicator (visual only — the hit area below handles clicks)
                 if (nTbl > 0) {
-                    chevron = text(
-                        p.x + 11,
-                        p.y + L.dbHdrH / 2,
-                        collapsed ? "▸" : "▾",
-                        10,
-                        "#0891b2",
-                        "700",
-                        "middle",
+                    g.appendChild(
+                        text(
+                            p.x + 12,
+                            p.y + L.dbHdrH / 2,
+                            collapsed ? "▸" : "▾",
+                            11,
+                            "#0891b2",
+                            "700",
+                            "middle",
+                        ),
                     );
-                    chevron.style.cursor = "pointer";
-                    chevron.addEventListener("click", (e) => {
-                        e.stopPropagation();
-                        toggleCollapse(db.id);
-                    });
-                    g.appendChild(chevron);
                 }
 
                 // DB icon + label
@@ -1915,6 +1910,32 @@
                         toggleCollapse(db.id);
                     });
                     g.appendChild(cnt);
+                }
+
+                // Enlarged, transparent toggle hit area over the left of the
+                // header (and the whole row when collapsed) so the chevron is
+                // easy to hit without stealing the rest of the header for select.
+                if (nTbl > 0) {
+                    const hit = rect(
+                        p.x,
+                        p.y,
+                        collapsed ? p.w : L.dbToggleW,
+                        collapsed ? p.h : L.dbHdrH,
+                        L.dbR,
+                        "transparent",
+                        "none",
+                        0,
+                    );
+                    hit.style.cursor = "pointer";
+                    hit.appendChild(el("title"));
+                    hit.lastChild.textContent = collapsed
+                        ? "Expand"
+                        : "Collapse";
+                    hit.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        toggleCollapse(db.id);
+                    });
+                    g.appendChild(hit);
                 }
 
                 g.addEventListener("click", (e) => {
