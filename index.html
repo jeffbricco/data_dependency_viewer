@@ -646,6 +646,14 @@
                 Impact Analysis
             </button>
 
+            <button
+                class="hdr-btn"
+                id="collapse-btn"
+                title="Collapse or expand all database tables"
+            >
+                Collapse all
+            </button>
+
             <span id="hdr-meta">Loading…</span>
         </div>
 
@@ -794,6 +802,8 @@
                 dbPadV: 8,
                 dbGap: 8,
                 dbIndent: 10,
+                dbCollapsedH: 30, // height of a collapsed database (header only)
+                collapseThreshold: 12, // tables above this → collapsed on load
                 leafH: 36,
                 leafGap: 5,
                 leafIndent: 20,
@@ -1051,7 +1061,63 @@
                 pos: {}, // id → { x, y, w, h }
                 allNodes: [], // flat list of all selectable leaf nodes
                 edges: [],
+                collapsed: new Set(), // database IDs whose tables are hidden
+                collapseInit: false, // first-load default-collapse applied?
+                tableToDb: {}, // table id → owning database id
+                dbTableIds: {}, // database id → [table ids]
             };
+
+            // Build lookup maps for collapse handling (table↔database).
+            function buildGroupMaps() {
+                S.tableToDb = {};
+                S.dbTableIds = {};
+                for (const item of CATALOG.sourceTree || []) {
+                    if (item.type !== "server_group") continue;
+                    for (const db of item.databases || []) {
+                        const ids = [];
+                        for (const tbl of db.tables || []) {
+                            S.tableToDb[tbl.id] = db.id;
+                            ids.push(tbl.id);
+                        }
+                        S.dbTableIds[db.id] = ids;
+                    }
+                }
+            }
+
+            // On first load, collapse any database with a lot of tables so the
+            // graph isn't dominated by one giant column.
+            function initCollapseDefaults() {
+                if (S.collapseInit) return;
+                S.collapseInit = true;
+                for (const item of CATALOG.sourceTree || []) {
+                    if (item.type !== "server_group") continue;
+                    for (const db of item.databases || [])
+                        if ((db.tables || []).length > L.collapseThreshold)
+                            S.collapsed.add(db.id);
+                }
+            }
+
+            function toggleCollapse(dbId) {
+                if (S.collapsed.has(dbId)) S.collapsed.delete(dbId);
+                else S.collapsed.add(dbId);
+                render();
+            }
+
+            function setAllCollapsed(collapsed) {
+                S.collapsed = new Set();
+                if (collapsed)
+                    for (const dbId of Object.keys(S.dbTableIds))
+                        S.collapsed.add(dbId);
+                render();
+            }
+
+            // Resolve an asset ID to its visible representative: a table inside a
+            // collapsed database is represented by the database node.
+            function visibleRep(id) {
+                if (S.pos[id]) return id;
+                const dbId = S.tableToDb[id];
+                return dbId && S.pos[dbId] ? dbId : null;
+            }
 
             // ─── Data helpers ──────────────────────────────────────────────────────
             function getAllLeaves() {
@@ -1105,19 +1171,27 @@
                 return vis;
             }
 
-            function highlightSet(id) {
+            function nodeHighlight(id) {
                 if (S.impactMode) {
-                    return new Set([
-                        ...allDownstream(id),
-                        ...allUpstream(id),
-                        id,
-                    ]);
+                    return [...allDownstream(id), ...allUpstream(id), id];
                 }
-                return new Set([
+                return [
                     id,
                     ...upstream(id).map((n) => n.id),
                     ...downstream(id).map((n) => n.id),
-                ]);
+                ];
+            }
+
+            function highlightSet(id) {
+                // A database node aggregates the lineage of all its tables.
+                const tableIds = S.dbTableIds[id];
+                if (tableIds) {
+                    const set = new Set([id]);
+                    for (const tid of tableIds)
+                        for (const x of nodeHighlight(tid)) set.add(x);
+                    return set;
+                }
+                return new Set(nodeHighlight(id));
             }
 
             function searchSet() {
@@ -1142,6 +1216,7 @@
 
             // ─── Layout engine ─────────────────────────────────────────────────────────
             function calcDbH(db) {
+                if (S.collapsed.has(db.id)) return L.dbCollapsedH;
                 const n = (db.tables || []).length;
                 return (
                     L.dbHdrH +
@@ -1222,12 +1297,19 @@
                         const dbX = COL.srcX + L.dbIndent;
                         const dbW = L.srcW - L.dbIndent * 2;
                         pos[db.id] = { x: dbX, y: iy, w: dbW, h: dbH };
-                        let ty = iy + L.dbHdrH + L.dbPadV;
-                        for (const tbl of db.tables || []) {
-                            const tx = dbX + L.leafIndent;
-                            const tw = dbW - L.leafIndent - 8;
-                            pos[tbl.id] = { x: tx, y: ty, w: tw, h: L.leafH };
-                            ty += L.leafH + L.leafGap;
+                        if (!S.collapsed.has(db.id)) {
+                            let ty = iy + L.dbHdrH + L.dbPadV;
+                            for (const tbl of db.tables || []) {
+                                const tx = dbX + L.leafIndent;
+                                const tw = dbW - L.leafIndent - 8;
+                                pos[tbl.id] = {
+                                    x: tx,
+                                    y: ty,
+                                    w: tw,
+                                    h: L.leafH,
+                                };
+                                ty += L.leafH + L.leafGap;
+                            }
                         }
                         iy +=
                             dbH +
@@ -1463,7 +1545,11 @@
                 svg.appendChild(hdrs);
 
                 // ── Edge layer (skip intra-consumer edges — those are tree connectors) ─────────
+                // Endpoints inside a collapsed database are re-routed to the
+                // database node so its aggregate lineage stays visible. Multiple
+                // table edges that collapse onto the same pair are de-duplicated.
                 const edgeLayer = el("g", { id: "edge-layer" });
+                const drawnEdges = new Set();
                 for (const edge of S.edges) {
                     // Skip edges where BOTH endpoints are consumers AND target is a child
                     if (
@@ -1472,9 +1558,14 @@
                         childConIds.has(edge.target)
                     )
                         continue;
-                    const sp = pos[edge.source];
-                    const tp = pos[edge.target];
-                    if (!sp || !tp) continue;
+                    const rSrc = visibleRep(edge.source);
+                    const rTgt = visibleRep(edge.target);
+                    if (!rSrc || !rTgt || rSrc === rTgt) continue;
+                    const key = rSrc + "→" + rTgt;
+                    if (drawnEdges.has(key)) continue;
+                    drawnEdges.add(key);
+                    const sp = pos[rSrc];
+                    const tp = pos[rTgt];
                     const path = el("path", {
                         d: bezierPath(
                             sp.x + sp.w,
@@ -1486,8 +1577,8 @@
                         "stroke-width": "1.5",
                         fill: "none",
                         "marker-end": "url(#arr)",
-                        "data-src": edge.source,
-                        "data-tgt": edge.target,
+                        "data-src": rSrc,
+                        "data-tgt": rTgt,
                         class: "edge",
                     });
                     edgeLayer.appendChild(path);
@@ -1694,6 +1785,7 @@
                 });
 
                 updateMeta();
+                updateCollapseBtn();
                 applyVisuals();
             }
 
@@ -1757,14 +1849,37 @@
                 const p = pos[db.id];
                 if (!p) return;
                 const g = el("g", { "data-id": db.id, class: "node-g db-g" });
+                const nTbl = (db.tables || []).length;
+                const collapsed = S.collapsed.has(db.id);
 
                 g.appendChild(
                     rect(p.x, p.y, p.w, p.h, L.dbR, "#e0fffe", "#a5f3fc", 1.2),
                 );
-                // DB header
+
+                // Chevron toggle (only meaningful when the DB has tables)
+                let chevron = null;
+                if (nTbl > 0) {
+                    chevron = text(
+                        p.x + 11,
+                        p.y + L.dbHdrH / 2,
+                        collapsed ? "▸" : "▾",
+                        10,
+                        "#0891b2",
+                        "700",
+                        "middle",
+                    );
+                    chevron.style.cursor = "pointer";
+                    chevron.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        toggleCollapse(db.id);
+                    });
+                    g.appendChild(chevron);
+                }
+
+                // DB icon + label
                 g.appendChild(
                     text(
-                        p.x + 8,
+                        p.x + 24,
                         p.y + L.dbHdrH / 2,
                         "◫",
                         11,
@@ -1774,14 +1889,33 @@
                 );
                 g.appendChild(
                     text(
-                        p.x + 20,
+                        p.x + 36,
                         p.y + L.dbHdrH / 2,
-                        trunc(db.label, 30),
+                        trunc(db.label, collapsed ? 22 : 28),
                         11.5,
                         "#0e7490",
                         "600",
                     ),
                 );
+
+                // Table count — shown when collapsed so the hidden volume is clear
+                if (collapsed && nTbl > 0) {
+                    const cnt = text(
+                        p.x + p.w - (db.criticality ? 22 : 10),
+                        p.y + L.dbHdrH / 2,
+                        `${nTbl.toLocaleString()} ${nTbl === 1 ? "table" : "tables"}`,
+                        10,
+                        "#0e7490",
+                        "600",
+                        "end",
+                    );
+                    cnt.style.cursor = "pointer";
+                    cnt.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        toggleCollapse(db.id);
+                    });
+                    g.appendChild(cnt);
+                }
 
                 g.addEventListener("click", (e) => {
                     e.stopPropagation();
@@ -1789,8 +1923,9 @@
                 });
                 parent.appendChild(g);
 
-                for (const tbl of db.tables || [])
-                    renderLeaf(parent, tbl, pos[tbl.id]);
+                if (!collapsed)
+                    for (const tbl of db.tables || [])
+                        renderLeaf(parent, tbl, pos[tbl.id]);
             }
 
             function renderLeaf(parent, node, p) {
@@ -2169,6 +2304,18 @@
                         : srchSet;
                 }
 
+                // Tables hidden inside a collapsed database are represented by
+                // the database node — light it (and the rerouted edges) when one
+                // of its tables is in the active set.
+                if (effective) {
+                    const aug = new Set(effective);
+                    for (const id of effective) {
+                        const rep = visibleRep(id);
+                        if (rep) aug.add(rep);
+                    }
+                    effective = aug;
+                }
+
                 const hasDim = !!effective;
 
                 // Nodes
@@ -2461,6 +2608,30 @@
                     applyVisuals();
                 });
 
+            function anyExpanded() {
+                return Object.keys(S.dbTableIds).some(
+                    (dbId) =>
+                        S.dbTableIds[dbId].length > 0 &&
+                        !S.collapsed.has(dbId),
+                );
+            }
+
+            function updateCollapseBtn() {
+                const btn = document.getElementById("collapse-btn");
+                if (!btn) return;
+                const dbCount = Object.keys(S.dbTableIds).filter(
+                    (d) => S.dbTableIds[d].length > 0,
+                ).length;
+                btn.style.display = dbCount ? "" : "none";
+                btn.textContent = anyExpanded() ? "Collapse all" : "Expand all";
+            }
+
+            document
+                .getElementById("collapse-btn")
+                .addEventListener("click", () => {
+                    setAllCollapsed(anyExpanded());
+                });
+
             document.getElementById("search").addEventListener("input", (e) => {
                 S.search = e.target.value.trim();
                 applyVisuals();
@@ -2479,6 +2650,8 @@
                         "catalog.js missing";
                     return;
                 }
+                buildGroupMaps();
+                initCollapseDefaults();
                 render();
             });
         </script>

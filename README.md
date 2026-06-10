@@ -217,5 +217,6 @@ Without PyYAML, a minimal fallback parser handles simple frontmatter (no nested 
 - **Click dep chips** — navigate to connected assets
 - **Search** — filters by name, subtype, owner, or documentation content; connected context nodes stay visible
 - **Impact Analysis** — toggle in header; click a node to see blast radius (how many downstream assets are affected if it fails)
+- **Collapse / expand databases** — click the ▾/▸ chevron on a database header to hide or show its tables (a collapsed database shows its table count). Databases with more than 12 tables start collapsed. Use **Collapse all / Expand all** in the header to toggle every database at once. While collapsed, a database's table-level lineage is aggregated onto the database node, so edges and impact analysis still work.
 - **Esc** — close detail panel
 - Works entirely offline once loaded (fonts load from Google CDN on first open)
